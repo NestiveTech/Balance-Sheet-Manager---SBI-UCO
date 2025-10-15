@@ -1,20 +1,11 @@
 /**
- * Personal Balance Sheet Manager - Frontend JavaScript
- * Handles all UI interactions and backend communication
- * Web App URL: https://script.google.com/macros/s/AKfycby77OEZxMFC40frarynchg0CnEoj4195cULbW_DwnQn/dev
+ * Personal Balance Sheet Manager - Frontend
+ * Uses JSONP to bypass CORS restrictions
  */
 
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
+// REPLACE THIS WITH YOUR /exec URL (NOT /dev)
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycby77OEZxMFC40frarynchg0CnEoj4195cULbW_DwnQn/exec';
 
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycby77OEZxMFC40frarynchg0CnEoj4195cULbW_DwnQn/dev';
-
-// ============================================================================
-// STATE MANAGEMENT
-// ============================================================================
-
-let currentPage = 'dashboard';
 let transactions = [];
 let dashboardData = {};
 
@@ -23,192 +14,100 @@ let dashboardData = {};
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-});
-
-function initializeApp() {
-    console.log('Initializing Personal Balance Sheet Manager...');
-    
-    // Set current year
+    console.log('Initializing...');
     document.getElementById('currentYear').textContent = new Date().getFullYear();
+    document.getElementById('new-date').valueAsDate = new Date();
     
-    // Set default date for quick add
-    const today = new Date();
-    document.getElementById('new-date').valueAsDate = today;
-    
-    // Event listeners
-    setupNavigationListeners();
-    setupFormListeners();
-    setupButtonListeners();
-    
-    // Load initial data
-    console.log('Loading initial data...');
+    setupListeners();
     loadDashboard();
     loadTransactions();
     loadSettings();
-}
+});
 
 // ============================================================================
-// NAVIGATION
+// API CALLS USING JSONP
 // ============================================================================
 
-function setupNavigationListeners() {
-    const navButtons = document.querySelectorAll('.nav-btn');
-    
-    navButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const page = btn.getAttribute('data-page');
-            switchPage(page);
-        });
+function apiCallJSONP(action) {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const script = document.createElement('script');
+        const timeout = setTimeout(() => {
+            cleanup();
+            reject(new Error('Request timeout'));
+        }, 30000);
+        
+        window[callbackName] = (data) => {
+            clearTimeout(timeout);
+            cleanup();
+            resolve(data);
+        };
+        
+        function cleanup() {
+            delete window[callbackName];
+            if (script.parentNode) {
+                script.parentNode.removeChild(script);
+            }
+        }
+        
+        script.src = `${API_BASE_URL}?action=${action}&callback=${callbackName}&_=${Date.now()}`;
+        script.onerror = () => {
+            clearTimeout(timeout);
+            cleanup();
+            reject(new Error('Script load error'));
+        };
+        
+        document.head.appendChild(script);
     });
 }
 
-function switchPage(pageName) {
-    console.log('Switching to page:', pageName);
-    
-    // Update navigation
+function apiCallPOST(action, params = {}) {
+    showLoading();
+    return fetch(API_BASE_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, params }),
+        headers: { 'Content-Type': 'text/plain' },
+        mode: 'no-cors'
+    })
+    .then(() => {
+        hideLoading();
+        return { success: true };
+    })
+    .catch(err => {
+        hideLoading();
+        console.error('Error:', err);
+        return { success: false, error: err.message };
+    });
+}
+
+// ============================================================================
+// EVENT LISTENERS
+// ============================================================================
+
+function setupListeners() {
     document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
+        btn.addEventListener('click', () => switchPage(btn.getAttribute('data-page')));
     });
-    document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
     
-    // Update pages
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    document.getElementById(`${pageName}-page`).classList.add('active');
-    
-    currentPage = pageName;
-    
-    // Load data for the page
-    if (pageName === 'dashboard') {
-        loadDashboard();
-    } else if (pageName === 'transactions') {
-        loadTransactions();
-    } else if (pageName === 'settings') {
-        loadSettings();
-    }
-}
-
-// ============================================================================
-// FORM LISTENERS
-// ============================================================================
-
-function setupFormListeners() {
-    // Quick add form
     document.getElementById('quick-add-form').addEventListener('submit', handleAddTransaction);
-    
-    // Settings form
     document.getElementById('settings-form').addEventListener('submit', handleSaveSettings);
-    
-    // Edit form
     document.getElementById('edit-form').addEventListener('submit', handleEditTransaction);
     document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
-}
-
-function setupButtonListeners() {
-    // Recalculate button
     document.getElementById('recalculate-btn').addEventListener('click', handleRecalculate);
-    
-    // Import/Export buttons
-    document.getElementById('import-btn').addEventListener('click', () => {
-        document.getElementById('import-file').click();
-    });
-    
+    document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
     document.getElementById('import-file').addEventListener('change', handleImport);
     document.getElementById('export-btn').addEventListener('click', handleExport);
 }
 
-// ============================================================================
-// API COMMUNICATION
-// ============================================================================
-
-async function apiCall(action, params = {}) {
-    console.log(`API Call: ${action}`, params);
-    showLoading();
+function switchPage(pageName) {
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    document.getElementById(`${pageName}-page`).classList.add('active');
     
-    try {
-        const url = `${API_BASE_URL}?action=${action}&timestamp=${Date.now()}`;
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            redirect: 'follow',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const text = await response.text();
-        console.log('API Response:', text.substring(0, 200));
-        
-        // Try to parse as JSON
-        try {
-            const data = JSON.parse(text);
-            hideLoading();
-            console.log('Parsed data:', data);
-            return data;
-        } catch (e) {
-            // If HTML returned (auth page), handle appropriately
-            if (text.includes('Google')) {
-                hideLoading();
-                showToast('Authentication required. Please check your Apps Script permissions.', 'error');
-                return { success: false, error: 'Authentication required' };
-            }
-            hideLoading();
-            return { success: false, error: 'Invalid response format' };
-        }
-    } catch (error) {
-        hideLoading();
-        console.error('API Error:', error);
-        showToast('Connection error: ' + error.message, 'error');
-        return { success: false, error: error.message };
-    }
-}
-
-async function apiCallPost(action, params = {}) {
-    console.log(`API POST Call: ${action}`, params);
-    showLoading();
-    
-    try {
-        const response = await fetch(API_BASE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: action,
-                params: params
-            }),
-            redirect: 'follow'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const text = await response.text();
-        console.log('API Response:', text.substring(0, 200));
-        
-        try {
-            const data = JSON.parse(text);
-            hideLoading();
-            console.log('Parsed data:', data);
-            return data;
-        } catch (e) {
-            hideLoading();
-            // For write operations, assume success if no error
-            return { success: true, message: 'Operation completed' };
-        }
-    } catch (error) {
-        hideLoading();
-        console.error('API Error:', error);
-        showToast('Connection error: ' + error.message, 'error');
-        return { success: false, error: error.message };
-    }
+    if (pageName === 'dashboard') loadDashboard();
+    else if (pageName === 'transactions') loadTransactions();
+    else if (pageName === 'settings') loadSettings();
 }
 
 // ============================================================================
@@ -216,28 +115,28 @@ async function apiCallPost(action, params = {}) {
 // ============================================================================
 
 async function loadDashboard() {
-    console.log('Loading dashboard...');
-    const result = await apiCall('getDashboard');
-    
-    if (result.success && result.data) {
-        dashboardData = result.data;
-        renderDashboard();
-        console.log('Dashboard loaded successfully');
-    } else {
-        showToast('Failed to load dashboard data', 'error');
-        console.error('Dashboard load failed:', result);
+    showLoading();
+    try {
+        const result = await apiCallJSONP('getDashboard');
+        hideLoading();
+        
+        if (result.success && result.data) {
+            dashboardData = result.data;
+            document.getElementById('salary-value').textContent = formatCurrency(dashboardData.salary);
+            document.getElementById('sbi-gross-value').textContent = formatCurrency(dashboardData.gross_sbi);
+            document.getElementById('sbi-net-value').textContent = formatCurrency(dashboardData.net_sbi);
+            document.getElementById('uco-gross-value').textContent = formatCurrency(dashboardData.gross_uco);
+            document.getElementById('uco-net-value').textContent = formatCurrency(dashboardData.net_uco);
+            document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_gross);
+            document.getElementById('combined-net-value').textContent = formatCurrency(dashboardData.combined_net);
+            document.getElementById('last-updated').textContent = formatDateTime(dashboardData.last_updated);
+        } else {
+            showToast('Failed to load dashboard', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Error: ' + error.message, 'error');
     }
-}
-
-function renderDashboard() {
-    document.getElementById('salary-value').textContent = formatCurrency(dashboardData.salary);
-    document.getElementById('sbi-gross-value').textContent = formatCurrency(dashboardData.gross_sbi);
-    document.getElementById('sbi-net-value').textContent = formatCurrency(dashboardData.net_sbi);
-    document.getElementById('uco-gross-value').textContent = formatCurrency(dashboardData.gross_uco);
-    document.getElementById('uco-net-value').textContent = formatCurrency(dashboardData.net_uco);
-    document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_gross);
-    document.getElementById('combined-net-value').textContent = formatCurrency(dashboardData.combined_net);
-    document.getElementById('last-updated').textContent = formatDateTime(dashboardData.last_updated);
 }
 
 // ============================================================================
@@ -245,33 +144,34 @@ function renderDashboard() {
 // ============================================================================
 
 async function loadTransactions() {
-    console.log('Loading transactions...');
-    const result = await apiCall('getTransactions');
-    
-    if (result.success && result.data) {
-        transactions = result.data;
-        renderTransactions();
-        updateSummaryStrip();
-        console.log(`Loaded ${transactions.length} transactions`);
-    } else {
-        showToast('Failed to load transactions', 'error');
-        console.error('Transactions load failed:', result);
+    showLoading();
+    try {
+        const result = await apiCallJSONP('getTransactions');
+        hideLoading();
+        
+        if (result.success && result.data) {
+            transactions = result.data;
+            renderTransactions();
+            updateSummary();
+        } else {
+            showToast('Failed to load transactions', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Error: ' + error.message, 'error');
     }
 }
 
 function renderTransactions() {
     const tbody = document.getElementById('transactions-tbody');
-    
     if (transactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--color-text-light);">No transactions found. Add your first transaction above.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#64748b;">No transactions found</td></tr>';
         return;
     }
     
-    tbody.innerHTML = transactions
-        .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort by date descending
-        .map((tx, index) => `
+    tbody.innerHTML = transactions.sort((a,b) => new Date(b.date) - new Date(a.date)).map((tx, i) => `
         <tr>
-            <td>${index + 1}</td>
+            <td>${i+1}</td>
             <td>${tx.date}</td>
             <td>${escapeHtml(tx.description)}</td>
             <td>₹${parseFloat(tx.amount).toFixed(2)}</td>
@@ -284,118 +184,79 @@ function renderTransactions() {
     `).join('');
 }
 
-function updateSummaryStrip() {
-    const totalExpenses = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
-    const sbiExpenses = transactions.filter(tx => tx.bank === 'sbi').reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
-    const ucoExpenses = transactions.filter(tx => tx.bank === 'uco').reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
-    
-    document.getElementById('total-expenses').textContent = formatCurrency(totalExpenses);
-    document.getElementById('sbi-expenses').textContent = formatCurrency(sbiExpenses);
-    document.getElementById('uco-expenses').textContent = formatCurrency(ucoExpenses);
+function updateSummary() {
+    const total = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+    const sbi = transactions.filter(tx => tx.bank === 'sbi').reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+    const uco = transactions.filter(tx => tx.bank === 'uco').reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+    document.getElementById('total-expenses').textContent = formatCurrency(total);
+    document.getElementById('sbi-expenses').textContent = formatCurrency(sbi);
+    document.getElementById('uco-expenses').textContent = formatCurrency(uco);
 }
 
 async function handleAddTransaction(e) {
     e.preventDefault();
-    
-    const transaction = {
+    const tx = {
         date: document.getElementById('new-date').value,
         description: document.getElementById('new-description').value,
         amount: parseFloat(document.getElementById('new-amount').value),
         bank: document.getElementById('new-bank').value
     };
     
-    console.log('Adding transaction:', transaction);
+    if (!validateTransaction(tx)) return;
     
-    // Validation
-    if (!validateTransaction(transaction)) {
-        return;
-    }
+    await apiCallPOST('addTransaction', tx);
+    showToast('Added! ✅ Refreshing...', 'success');
+    document.getElementById('quick-add-form').reset();
+    document.getElementById('new-date').valueAsDate = new Date();
     
-    const result = await apiCallPost('addTransaction', transaction);
-    
-    if (result.success) {
-        showToast('Transaction added successfully! ✅', 'success');
-        document.getElementById('quick-add-form').reset();
-        document.getElementById('new-date').valueAsDate = new Date();
-        
-        // Reload data after a short delay
-        setTimeout(async () => {
-            await loadTransactions();
-            await loadDashboard();
-        }, 1000);
-    } else {
-        showToast(result.error || 'Failed to add transaction', 'error');
-    }
+    setTimeout(() => {
+        loadTransactions();
+        loadDashboard();
+    }, 1500);
 }
 
 function editTransaction(id) {
-    console.log('Editing transaction:', id);
     const tx = transactions.find(t => t.id === id);
-    if (!tx) {
-        showToast('Transaction not found', 'error');
-        return;
-    }
-    
+    if (!tx) return;
     document.getElementById('edit-id').value = tx.id;
     document.getElementById('edit-date').value = tx.date;
     document.getElementById('edit-description').value = tx.description;
     document.getElementById('edit-amount').value = tx.amount;
     document.getElementById('edit-bank').value = tx.bank;
-    
     document.getElementById('edit-modal').classList.add('active');
 }
 
 async function handleEditTransaction(e) {
     e.preventDefault();
-    
     const id = parseInt(document.getElementById('edit-id').value);
-    const transaction = {
+    const tx = {
         date: document.getElementById('edit-date').value,
         description: document.getElementById('edit-description').value,
         amount: parseFloat(document.getElementById('edit-amount').value),
         bank: document.getElementById('edit-bank').value
     };
     
-    console.log('Updating transaction:', id, transaction);
+    if (!validateTransaction(tx)) return;
     
-    if (!validateTransaction(transaction)) {
-        return;
-    }
+    await apiCallPOST('updateTransaction', { id, transaction: tx });
+    showToast('Updated! ✅ Refreshing...', 'success');
+    closeEditModal();
     
-    const result = await apiCallPost('updateTransaction', { id, transaction });
-    
-    if (result.success) {
-        showToast('Transaction updated successfully! ✅', 'success');
-        closeEditModal();
-        
-        setTimeout(async () => {
-            await loadTransactions();
-            await loadDashboard();
-        }, 1000);
-    } else {
-        showToast(result.error || 'Failed to update transaction', 'error');
-    }
+    setTimeout(() => {
+        loadTransactions();
+        loadDashboard();
+    }, 1500);
 }
 
 async function deleteTransaction(id) {
-    if (!confirm('Are you sure you want to delete this transaction?')) {
-        return;
-    }
+    if (!confirm('Delete this transaction?')) return;
+    await apiCallPOST('deleteTransaction', { id });
+    showToast('Deleted! 🗑️ Refreshing...', 'success');
     
-    console.log('Deleting transaction:', id);
-    
-    const result = await apiCallPost('deleteTransaction', { id });
-    
-    if (result.success) {
-        showToast('Transaction deleted successfully! 🗑️', 'success');
-        
-        setTimeout(async () => {
-            await loadTransactions();
-            await loadDashboard();
-        }, 1000);
-    } else {
-        showToast(result.error || 'Failed to delete transaction', 'error');
-    }
+    setTimeout(() => {
+        loadTransactions();
+        loadDashboard();
+    }, 1500);
 }
 
 function closeEditModal() {
@@ -407,68 +268,36 @@ function closeEditModal() {
 // ============================================================================
 
 async function loadSettings() {
-    console.log('Loading settings...');
-    const result = await apiCall('getSettings');
-    
-    if (result.success && result.data) {
-        const settings = result.data;
-        document.getElementById('salary-input').value = settings.salary_amount || 0;
-        document.getElementById('sbi-opening-input').value = settings.opening_balance_sbi || 0;
-        document.getElementById('uco-opening-input').value = settings.opening_balance_uco || 0;
-        console.log('Settings loaded successfully');
-    } else {
-        showToast('Failed to load settings', 'error');
-        console.error('Settings load failed:', result);
+    try {
+        const result = await apiCallJSONP('getSettings');
+        if (result.success && result.data) {
+            document.getElementById('salary-input').value = result.data.salary_amount || 0;
+            document.getElementById('sbi-opening-input').value = result.data.opening_balance_sbi || 0;
+            document.getElementById('uco-opening-input').value = result.data.opening_balance_uco || 0;
+        }
+    } catch (error) {
+        console.error('Settings error:', error);
     }
 }
 
 async function handleSaveSettings(e) {
     e.preventDefault();
-    
     const settings = {
         salary_amount: parseFloat(document.getElementById('salary-input').value),
         opening_balance_sbi: parseFloat(document.getElementById('sbi-opening-input').value),
         opening_balance_uco: parseFloat(document.getElementById('uco-opening-input').value)
     };
     
-    console.log('Saving settings:', settings);
+    await apiCallPOST('updateSettings', settings);
+    showToast('Settings saved! ✅ Refreshing...', 'success');
     
-    if (isNaN(settings.salary_amount) || settings.salary_amount < 0) {
-        showToast('Invalid salary amount', 'error');
-        return;
-    }
-    if (isNaN(settings.opening_balance_sbi) || settings.opening_balance_sbi < 0) {
-        showToast('Invalid SBI opening balance', 'error');
-        return;
-    }
-    if (isNaN(settings.opening_balance_uco) || settings.opening_balance_uco < 0) {
-        showToast('Invalid UCO opening balance', 'error');
-        return;
-    }
-    
-    const result = await apiCallPost('updateSettings', settings);
-    
-    if (result.success) {
-        showToast('Settings saved successfully! ✅', 'success');
-        
-        setTimeout(async () => {
-            await loadDashboard();
-        }, 1000);
-    } else {
-        showToast(result.error || 'Failed to save settings', 'error');
-    }
+    setTimeout(() => loadDashboard(), 1500);
 }
 
 async function handleRecalculate() {
-    console.log('Recalculating...');
-    showToast('Recalculating all balances...', 'info');
-    
-    await Promise.all([
-        loadDashboard(),
-        loadTransactions()
-    ]);
-    
-    showToast('Recalculated successfully! ✅', 'success');
+    showToast('Recalculating...', 'info');
+    await Promise.all([loadDashboard(), loadTransactions()]);
+    showToast('Done! ✅', 'success');
 }
 
 // ============================================================================
@@ -479,114 +308,67 @@ async function handleImport(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    console.log('Importing file:', file.name);
-    
     const reader = new FileReader();
-    
     reader.onload = async (event) => {
-        const text = event.target.result;
-        const rows = parseCSV(text);
-        
+        const rows = parseCSV(event.target.result);
         if (rows.length === 0) {
-            showToast('No data found in file', 'error');
+            showToast('No data found', 'error');
             return;
         }
         
-        console.log(`Parsed ${rows.length} rows from CSV`);
+        await apiCallPOST('importTransactions', { data: rows });
+        showToast('Import started! Refreshing...', 'success');
         
-        const result = await apiCallPost('importTransactions', { data: rows });
-        
-        if (result.success) {
-            showToast(`${result.message || 'Import completed'} ✅`, 'success');
-            
-            setTimeout(async () => {
-                await loadTransactions();
-                await loadDashboard();
-            }, 1500);
-        } else {
-            showToast(result.error || 'Failed to import data', 'error');
-        }
+        setTimeout(() => {
+            loadTransactions();
+            loadDashboard();
+        }, 2000);
     };
-    
-    reader.onerror = () => {
-        showToast('Failed to read file', 'error');
-    };
-    
     reader.readAsText(file);
     e.target.value = '';
 }
 
 async function handleExport() {
-    console.log('Exporting data...');
-    const result = await apiCall('exportToCSV');
-    
-    if (result.success && result.data) {
-        const blob = new Blob([result.data], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `balance_sheet_export_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        showToast('Export completed successfully! 📤', 'success');
-    } else {
-        showToast('Failed to export data', 'error');
+    showLoading();
+    try {
+        const result = await apiCallJSONP('exportToCSV');
+        hideLoading();
+        
+        if (result.success && result.data) {
+            const blob = new Blob([result.data], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `balance_sheet_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported! 📤', 'success');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('Export failed', 'error');
     }
 }
 
 // ============================================================================
-// VALIDATION
+// UTILITIES
 // ============================================================================
 
 function validateTransaction(tx) {
-    if (!tx.date) {
-        showToast('Date is required', 'error');
-        return false;
-    }
-    
-    if (!tx.description || tx.description.trim() === '') {
-        showToast('Description is required', 'error');
-        return false;
-    }
-    
-    if (isNaN(tx.amount) || tx.amount <= 0) {
-        showToast('Amount must be a positive number', 'error');
-        return false;
-    }
-    
-    if (tx.bank !== 'sbi' && tx.bank !== 'uco') {
-        showToast('Please select a valid bank (SBI or UCO)', 'error');
-        return false;
-    }
-    
+    if (!tx.date) { showToast('Date required', 'error'); return false; }
+    if (!tx.description.trim()) { showToast('Description required', 'error'); return false; }
+    if (isNaN(tx.amount) || tx.amount <= 0) { showToast('Invalid amount', 'error'); return false; }
+    if (tx.bank !== 'sbi' && tx.bank !== 'uco') { showToast('Select bank', 'error'); return false; }
     return true;
 }
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-function formatCurrency(value) {
-    const num = parseFloat(value || 0);
-    return `₹${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatCurrency(val) {
+    return `₹${parseFloat(val||0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 }
 
-function formatDateTime(isoString) {
-    if (!isoString) return 'Never';
-    try {
-        const date = new Date(isoString);
-        return date.toLocaleString('en-IN', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } catch (e) {
-        return isoString;
-    }
+function formatDateTime(iso) {
+    if (!iso) return 'Never';
+    return new Date(iso).toLocaleString('en-IN', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
 function escapeHtml(text) {
@@ -596,35 +378,20 @@ function escapeHtml(text) {
 }
 
 function parseCSV(text) {
-    const lines = text.split('\n').filter(line => line.trim());
-    return lines.map(line => {
-        // Handle quoted fields
+    return text.split('\n').filter(l => l.trim()).map(line => {
         const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
         return values.map(v => v.trim().replace(/^"(.*)"$/, '$1'));
     });
 }
 
-function showLoading() {
-    document.getElementById('loading-overlay').classList.add('active');
-}
-
-function hideLoading() {
-    document.getElementById('loading-overlay').classList.remove('active');
-}
-
-function showToast(message, type = 'info') {
+function showLoading() { document.getElementById('loading-overlay').classList.add('active'); }
+function hideLoading() { document.getElementById('loading-overlay').classList.remove('active'); }
+function showToast(msg, type='info') {
     const toast = document.getElementById('toast');
-    toast.textContent = message;
+    toast.textContent = msg;
     toast.className = `toast ${type} active`;
-    
-    setTimeout(() => {
-        toast.classList.remove('active');
-    }, 3000);
+    setTimeout(() => toast.classList.remove('active'), 3000);
 }
 
-// Make functions globally accessible for inline onclick handlers
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;
-
-// Log initialization complete
-console.log('Personal Balance Sheet Manager initialized successfully!');
