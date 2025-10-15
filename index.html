@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance Sheet Manager - SBI/UCO</title>
+    
+    <style>
+        /* =====================================================
+           BALANCE SHEET MANAGER - STYLES v1.1
+           With Present Balance Tracking
+           ===================================================== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007bff;
+            --primary-dark: #0056b3;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --secondary-color: #6c757d;
+            --light-bg: #f8f9fa;
+            --border-color: #dee2e6;
+            --text-dark: #333;
+            --text-light: #666;
+            --white: #fff;
+            --purple: #6f42c1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* ========== LOADING OVERLAY ========== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-overlay p {
+            color: var(--white);
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .header h1 {
+            color: var(--text-dark);
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .header .app-info {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .last-updated {
+            text-align: right;
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+            font-style: italic;
+        }
+
+        /* ========== ALERTS ========== */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 500;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .alert.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeeba;
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
+
+        /* ========== DASHBOARD TILES ========== */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .tile {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--white);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .tile:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        }
+
+        .tile.salary { 
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+        }
+        .tile.sbi-gross { 
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+        }
+        .tile.sbi-net { 
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); 
+        }
+        .tile.sbi-present {
+            background: linear-gradient(135deg, #5f72bd 0%, #9921e8 100%);
+            border: 3px solid #6f42c1;
+        }
+        .tile.uco-gross { 
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); 
+        }
+        .tile.uco-net { 
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); 
+        }
+        .tile.uco-present {
+            background: linear-gradient(135deg, #fc6076 0%, #ff9a44 100%);
+            border: 3px solid #fc6076;
+        }
+        .tile.combined-gross { 
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); 
+            color: var(--text-dark); 
+        }
+        .tile.combined-net { 
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); 
+            color: var(--text-dark); 
+            border: 3px solid #ff6b9d;
+        }
+        .tile.combined-present {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: var(--text-dark);
+            border: 4px solid #ff6b35;
+            box-shadow: 0 8px 25px rgba(255,107,53,0.3);
+        }
+
+        .tile-label {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tile-value {
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tile-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.3);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        /* ========== SECTIONS ========== */
+        .section {
+            margin-bottom: 2.5rem;
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            border-left: 5px solid var(--primary-color);
+            padding-left: 1rem;
+            font-weight: 700;
+        }
+
+        /* ========== FORMS ========== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input, 
+        .form-group select {
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .error {
+            color: var(--danger-color);
+            font-size: 0.85rem;
+            margin-top: 0.4rem;
+            font-weight: 500;
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary { 
+            background: var(--primary-color); 
+            color: var(--white); 
+        }
+        .btn-primary:hover { 
+            background: var(--primary-dark); 
+        }
+        
+        .btn-success { 
+            background: var(--success-color); 
+            color: var(--white); 
+        }
+        .btn-success:hover { 
+            background: #1e7e34; 
+        }
+        
+        .btn-danger { 
+            background: var(--danger-color); 
+            color: var(--white); 
+        }
+        .btn-danger:hover { 
+            background: #c82333; 
+        }
+        
+        .btn-warning { 
+            background: var(--warning-color); 
+            color: #212529; 
+        }
+        .btn-warning:hover { 
+            background: #e0a800; 
+        }
+        
+        .btn-secondary { 
+            background: var(--secondary-color); 
+            color: var(--white); 
+        }
+        .btn-secondary:hover { 
+            background: #5a6268; 
+        }
+        
+        .btn-info { 
+            background: var(--info-color); 
+            color: var(--white); 
+        }
+        .btn-info:hover { 
+            background: #138496; 
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* ========== TABLE ========== */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--white);
+        }
+
+        th {
+            background: var(--primary-color);
+            color: var(--white);
+            padding: 1.2rem;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+
+        td {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        /* ========== FILTERS ========== */
+        .filter-section {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        /* ========== TOTALS ========== */
+        .totals {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.05rem;
+        }
+
+        .total-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+            border-top: 2px solid var(--primary-color);
+        }
+
+        /* ========== PREVIEW ========== */
+        .preview {
+            background: #e7f3ff;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            margin-top: 1.5rem;
+            border-left: 5px solid var(--primary-color);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .preview strong {
+            color: var(--primary-color);
+            font-size: 1.05rem;
+        }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            margin-bottom: 1.5rem;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filter-section .form-group {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+
+        /* ========== UTILITIES ========== */
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ========== HEADER ========== -->
+        <div class="header">
+            <h1>BALANCE SHEET – <span id="currentYear">2025</span></h1>
+            <p>Personal Balance Sheet Manager (SBI/UCO)</p>
+            <div class="app-info">
+                Version 1.1 | <span id="sheetName">Loading...</span>
+            </div>
+            <div class="last-updated">
+                Last updated: <span id="lastUpdated">Loading...</span>
+            </div>
+        </div>
+
+        <!-- ========== LOADING OVERLAY ========== -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+
+        <!-- ========== ALERT ========== -->
+        <div id="alert" class="alert" style="display:none;"></div>
+
+        <!-- ========== DASHBOARD TILES ========== -->
+        <div class="dashboard">
+            <div class="tile salary">
+                <div class="tile-label">Salary Amount</div>
+                <div class="tile-value">₹<span id="tile-salary">0.00</span></div>
+            </div>
+            <div class="tile sbi-gross">
+                <div class="tile-label">SBI Opening Balance</div>
+                <div class="tile-value">₹<span id="tile-sbi-gross">0.00</span></div>
+            </div>
+            <div class="tile sbi-net">
+                <div class="tile-label">SBI Net Balance</div>
+                <div class="tile-value">₹<span id="tile-sbi-net">0.00</span></div>
+            </div>
+            <div class="tile sbi-present">
+                <div class="tile-label">💰 SBI Present Balance</div>
+                <div class="tile-value">₹<span id="tile-sbi-present">0.00</span></div>
+                <div class="tile-badge">Current</div>
+            </div>
+            <div class="tile uco-gross">
+                <div class="tile-label">UCO Opening Balance</div>
+                <div class="tile-value">₹<span id="tile-uco-gross">0.00</span></div>
+            </div>
+            <div class="tile uco-net">
+                <div class="tile-label">UCO Net Balance</div>
+                <div class="tile-value">₹<span id="tile-uco-net">0.00</span></div>
+            </div>
+            <div class="tile uco-present">
+                <div class="tile-label">💰 UCO Present Balance</div>
+                <div class="tile-value">₹<span id="tile-uco-present">0.00</span></div>
+                <div class="tile-badge">Current</div>
+            </div>
+            <div class="tile combined-gross">
+                <div class="tile-label">Combined Opening</div>
+                <div class="tile-value">₹<span id="tile-combined-gross">0.00</span></div>
+            </div>
+            <div class="tile combined-net">
+                <div class="tile-label">Combined Net Balance</div>
+                <div class="tile-value">₹<span id="tile-combined-net">0.00</span></div>
+            </div>
+            <div class="tile combined-present">
+                <div class="tile-label">💰 Combined Present Balance</div>
+                <div class="tile-value">₹<span id="tile-combined-present">0.00</span></div>
+                <div class="tile-badge">Total Current</div>
+            </div>
+        </div>
+
+        <!-- ========== ADD TRANSACTION SECTION ========== -->
+        <div class="section">
+            <h2 class="section-title">➕ Add Transaction</h2>
+            <form id="addTransactionForm" onsubmit="handleAddTransaction(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Date *</label>
+                        <input type="date" id="input-date" required>
+                        <span class="error" id="error-date"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <input type="text" id="input-description" placeholder="e.g., Grocery Shopping" required maxlength="200">
+                        <span class="error" id="error-description"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹) *</label>
+                        <input type="number" id="input-amount" placeholder="0.00" step="0.01" min="0.01" required>
+                        <span class="error" id="error-amount"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Bank *</label>
+                        <select id="input-bank" required>
+                            <option value="">-- Select Bank --</option>
+                            <option value="sbi">SBI</option>
+                            <option value="uco">UCO</option>
+                        </select>
+                        <span class="error" id="error-bank"></span>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        Add Transaction
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                        Clear Form
+                    </button>
+                </div>
+                <div id="preview" class="preview" style="display:none;">
+                    <strong>💡 Preview:</strong> After adding this transaction:<br>
+                    <span id="preview-text"></span>
+                </div>
+            </form>
+        </div>
+
+        <!-- ========== TRANSACTIONS SECTION ========== -->
+        <div class="section">
+            <h2 class="section-title">📋 Transactions</h2>
+            
+            <!-- Filters -->
+            <div class="filter-section">
+                <div class="form-group">
+                    <label>Filter by Bank</label>
+                    <select id="filter-bank" onchange="loadTransactions()">
+                        <option value="all">All Banks</option>
+                        <option value="sbi">SBI Only</option>
+                        <option value="uco">UCO Only</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>From Date</label>
+                    <input type="date" id="filter-date-from" onchange="loadTransactions()">
+                </div>
+                <div class="form-group">
+                    <label>To Date</label>
+                    <input type="date" id="filter-date-to" onchange="loadTransactions()">
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+                    Clear Filters
+                </button>
+            </div>
+
+            <!-- Transactions Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sl No</th>
+                            <th>Date</th>
+                            <th>For What</th>
+                            <th>Amount (₹)</th>
+                            <th>Bank</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr>
+                            <td colspan="6" class="text-center">
+                                Loading transactions...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State (shown when no transactions) -->
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <div class="empty-state-icon">📝</div>
+                <h3>No Transactions Yet</h3>
+                <p>Start by adding your first transaction using the form above.</p>
+            </div>
+
+            <!-- Totals Summary -->
+            <div class="totals">
+                <div class="total-row">
+                    <span><strong>Total SBI Expenses:</strong></span>
+                    <span>₹<span id="total-sbi">0.00</span></span>
+                </div>
+                <div class="total-row">
+                    <span><strong>Total UCO Expenses:</strong></span>
+                    <span>₹<span id="total-uco">0.00</span></span>
+                </div>
+                <div class="total-row">
+                    <span><strong>TOTAL ALL EXPENSES:</strong></span>
+                    <span>₹<span id="total-all">0.00</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== SETTINGS SECTION ========== -->
+        <div class="section">
+            <h2 class="section-title">⚙️ Settings & Actions</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Salary Amount (₹)</label>
+                    <input type="number" id="setting-salary" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Opening Balance SBI (₹)</label>
+                    <input type="number" id="setting-sbi" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Opening Balance UCO (₹)</label>
+                    <input type="number" id="setting-uco" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>💰 Present Balance SBI (₹)</label>
+                    <input type="number" id="setting-present-sbi" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>💰 Present Balance UCO (₹)</label>
+                    <input type="number" id="setting-present-uco" step="0.01" min="0" placeholder="0.00">
+                </div>
+            </div>
+            
+            <div class="btn-group mt-3">
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    💾 Save & Recalculate
+                </button>
+                <button class="btn btn-warning" onclick="exportCSV()">
+                    📥 Export to CSV
+                </button>
+                <button class="btn btn-danger" onclick="resetAll()">
+                    🗑️ Reset All Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== JAVASCRIPT ========== -->
+    <script>
+        /**
+         * =====================================================
+         * BALANCE SHEET MANAGER - CLIENT-SIDE JAVASCRIPT
+         * Version: 1.1 - With Present Balance Tracking
+         * =====================================================
+         */
+
+        // Global application state
+        const appState = {
+            settings: {},
+            transactions: [],
+            editingIndex: null
+        };
+
+        // ========== INITIALIZATION ==========
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Balance Sheet Manager v1.1 initializing...');
+            
+            // Set current year
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Set today's date as default
+            document.getElementById('input-date').value = getTodayDate();
+            
+            // Add event listeners for preview
+            document.getElementById('input-amount').addEventListener('input', updatePreview);
+            document.getElementById('input-bank').addEventListener('input', updatePreview);
+            
+            // Load all data
+            loadAllData();
+        });
+
+        // ========== UTILITY FUNCTIONS ==========
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert ${type}`;
+            alertDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function formatNumber(num) {
+            return parseFloat(num).toFixed(2);
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('en-IN', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: '2-digit' 
+            });
+        }
+
+        // ========== DATA LOADING ==========
+        function loadAllData() {
+            showLoading();
+            console.log('📥 Loading settings...');
+            
+            google.script.run
+                .withSuccessHandler(function(settings) {
+                    console.log('✅ Settings loaded:', settings);
+                    appState.settings = settings;
+                    
+                    // Update sheet name
+                    document.getElementById('sheetName').textContent = settings.sheet_name || 'N/A';
+                    
+                    populateSettings();
+                    loadTransactions();
+                })
+                .withFailureHandler(function(error) {
+                    console.error('❌ Error loading settings:', error);
+                    showAlert('Error loading settings: ' + error.message, 'error');
+                    hideLoading();
+                })
+                .getSettings();
+        }
+
+        function loadTransactions() {
+            console.log('📥 Loading transactions...');
+            
+            const filters = {
+                bank: document.getElementById('filter-bank').value,
+                dateFrom: document.getElementById('filter-date-from').value,
+                dateTo: document.getElementById('filter-date-to').value
+            };
+            
+            google.script.run
+                .withSuccessHandler(function(transactions) {
+                    console.log(`✅ Loaded ${transactions.length} transactions`);
+                    appState.transactions = transactions;
+                    calculateAndUpdate();
+                    hideLoading();
+                })
+                .withFailureHandler(function(error) {
+                    console.error('❌ Error loading transactions:', error);
+                    showAlert('Error loading transactions: ' + error.message, 'error');
+                    hideLoading();
+                })
+                .getTransactions(filters);
+        }
+
+        // ========== CALCULATIONS & UPDATES ==========
+        function calculateAndUpdate() {
+            console.log('🔄 Calculating balances...');
+            
+            const total_expenses_sbi = appState.transactions
+                .filter(t => t.bank === 'sbi')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const total_expenses_uco = appState.transactions
+                .filter(t => t.bank === 'uco')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const gross_sbi = appState.settings.opening_balance_sbi || 0;
+            const gross_uco = appState.settings.opening_balance_uco || 0;
+            const net_sbi = gross_sbi - total_expenses_sbi;
+            const net_uco = gross_uco - total_expenses_uco;
+            const present_sbi = appState.settings.present_balance_sbi || 0;
+            const present_uco = appState.settings.present_balance_uco || 0;
+            const combined_gross = gross_sbi + gross_uco;
+            const combined_net = net_sbi + net_uco;
+            const combined_present = present_sbi + present_uco;
+            const total_expenses = total_expenses_sbi + total_expenses_uco;
+
+            // Update dashboard tiles
+            document.getElementById('tile-salary').textContent = formatNumber(appState.settings.salary_amount || 0);
+            document.getElementById('tile-sbi-gross').textContent = formatNumber(gross_sbi);
+            document.getElementById('tile-sbi-net').textContent = formatNumber(net_sbi);
+            document.getElementById('tile-sbi-present').textContent = formatNumber(present_sbi);
+            document.getElementById('tile-uco-gross').textContent = formatNumber(gross_uco);
+            document.getElementById('tile-uco-net').textContent = formatNumber(net_uco);
+            document.getElementById('tile-uco-present').textContent = formatNumber(present_uco);
+            document.getElementById('tile-combined-gross').textContent = formatNumber(combined_gross);
+            document.getElementById('tile-combined-net').textContent = formatNumber(combined_net);
+            document.getElementById('tile-combined-present').textContent = formatNumber(combined_present);
+
+            // Update totals
+            document.getElementById('total-sbi').textContent = formatNumber(total_expenses_sbi);
+            document.getElementById('total-uco').textContent = formatNumber(total_expenses_uco);
+            document.getElementById('total-all').textContent = formatNumber(total_expenses);
+
+            // Update last updated
+            document.getElementById('lastUpdated').textContent = appState.settings.last_updated || '--';
+
+            renderTransactions();
+            
+            console.log('✅ Dashboard updated');
+        }
+
+        // ========== RENDER TRANSACTIONS TABLE ==========
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionsBody');
+            const emptyState = document.getElementById('emptyState');
+            const tableContainer = document.querySelector('.table-container');
+            
+            tbody.innerHTML = '';
+
+            if (appState.transactions.length === 0) {
+                tableContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            tableContainer.style.display = 'block';
+            emptyState.style.display = 'none';
+
+            // Sort by date (newest first)
+            const sorted = [...appState.transactions].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+
+            sorted.forEach((transaction, displayIndex) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${displayIndex + 1}</td>
+                    <td>${formatDate(transaction.date)}</td>
+                    <td>${transaction.description}</td>
+                    <td><strong>₹${formatNumber(transaction.amount)}</strong></td>
+                    <td><span style="background:${transaction.bank === 'sbi' ? '#4facfe' : '#fa709a'}; color:white; padding:0.25rem 0.75rem; border-radius:1rem; font-weight:600; text-transform:uppercase;">${transaction.bank}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-sm" onclick="editTransaction(${transaction.index})">
+                                ✏️ Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${transaction.index})">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // ========== TRANSACTION OPERATIONS ==========
+        function handleAddTransaction(event) {
+            event.preventDefault();
+
+            const date = document.getElementById('input-date').value;
+            const description = document.getElementById('input-description').value.trim();
+            const amount = document.getElementById('input-amount').value;
+            const bank = document.getElementById('input-bank').value;
+
+            if (!validateTransaction(date, description, amount, bank)) {
+                return;
+            }
+
+            const transaction = {
+                date: date,
+                description: description,
+                amount: parseFloat(amount),
+                bank: bank.toLowerCase()
+            };
+
+            showLoading();
+
+            if (appState.editingIndex !== null) {
+                // Update existing
+                google.script.run
+                    .withSuccessHandler(handleTransactionSuccess)
+                    .withFailureHandler(handleTransactionError)
+                    .updateTransaction(appState.editingIndex, transaction);
+            } else {
+                // Add new
+                google.script.run
+                    .withSuccessHandler(handleTransactionSuccess)
+                    .withFailureHandler(handleTransactionError)
+                    .addTransaction(transaction);
+            }
+        }
+
+        function handleTransactionSuccess(result) {
+            if (result.success) {
+                showAlert(result.message, 'success');
+                clearForm();
+                loadAllData();
+            } else {
+                showAlert(result.message, 'error');
+                hideLoading();
+            }
+        }
+
+        function handleTransactionError(error) {
+            showAlert('Error: ' + error.message, 'error');
+            hideLoading();
+        }
+
+        function editTransaction(index) {
+            const transaction = appState.transactions.find(t => t.index === index);
+            if (!transaction) {
+                showAlert('Transaction not found', 'error');
+                return;
+            }
+
+            document.getElementById('input-date').value = transaction.date;
+            document.getElementById('input-description').value = transaction.description;
+            document.getElementById('input-amount').value = transaction.amount;
+            document.getElementById('input-bank').value = transaction.bank;
+
+            appState.editingIndex = index;
+            document.getElementById('submitBtn').textContent = 'Update Transaction';
+            
+            // Scroll to form
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            showAlert('Editing transaction. Make changes and click Update.', 'info');
+        }
+
+        function deleteTransaction(index) {
+            if (!confirm('⚠️ Are you sure you want to delete this transaction?\n\nThis action cannot be undone.')) {
+                return;
+            }
+
+            showLoading();
+
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        loadAllData();
+                    } else {
+                        showAlert(result.message, 'error');
+                        hideLoading();
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    showAlert('Error: ' + error.message, 'error');
+                    hideLoading();
+                })
+                .deleteTransaction(index);
+        }
+
+        // ========== VALIDATION ==========
+        function validateTransaction(date, description, amount, bank) {
+            let valid = true;
+            
+            // Clear previous errors
+            ['date', 'description', 'amount', 'bank'].forEach(field => {
+                document.getElementById(`error-${field}`).textContent = '';
+            });
+
+            if (!date) {
+                document.getElementById('error-date').textContent = 'Date is required';
+                valid = false;
+            }
+
+            if (!description || description.length < 2) {
+                document.getElementById('error-description').textContent = 'Description is required (min 2 characters)';
+                valid = false;
+            }
+
+            if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+                document.getElementById('error-amount').textContent = 'Amount must be a positive number';
+                valid = false;
+            }
+
+            if (!bank || (bank !== 'sbi' && bank !== 'uco')) {
+                document.getElementById('error-bank').textContent = 'Please select a valid bank';
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        // ========== FORM OPERATIONS ==========
+        function clearForm() {
+            document.getElementById('addTransactionForm').reset();
+            document.getElementById('input-date').value = getTodayDate();
+            appState.editingIndex = null;
+            document.getElementById('submitBtn').textContent = 'Add Transaction';
+            document.getElementById('preview').style.display = 'none';
+            
+            ['date', 'description', 'amount', 'bank'].forEach(field => {
+                document.getElementById(`error-${field}`).textContent = '';
+            });
+        }
+
+        function updatePreview() {
+            const amount = parseFloat(document.getElementById('input-amount').value);
+            const bank = document.getElementById('input-bank').value;
+
+            if (amount > 0 && bank) {
+                const total_sbi = appState.transactions
+                    .filter(t => t.bank === 'sbi')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const total_uco = appState.transactions
+                    .filter(t => t.bank === 'uco')
+                    .reduce((sum, t) => sum + t.amount, 0);
+
+                let netSBI = (appState.settings.opening_balance_sbi || 0) - total_sbi;
+                let netUCO = (appState.settings.opening_balance_uco || 0) - total_uco;
+
+                if (bank === 'sbi') {
+                    netSBI -= amount;
+                } else if (bank === 'uco') {
+                    netUCO -= amount;
+                }
+
+                document.getElementById('preview-text').innerHTML = `
+                    <strong>Net SBI:</strong> ₹${formatNumber(netSBI)} | 
+                    <strong>Net UCO:</strong> ₹${formatNumber(netUCO)} | 
+                    <strong>Combined Net:</strong> ₹${formatNumber(netSBI + netUCO)}
+                `;
+                document.getElementById('preview').style.display = 'block';
+            } else {
+                document.getElementById('preview').style.display = 'none';
+            }
+        }
+
+        // ========== SETTINGS OPERATIONS ==========
+        function populateSettings() {
+            document.getElementById('setting-salary').value = appState.settings.salary_amount || 0;
+            document.getElementById('setting-sbi').value = appState.settings.opening_balance_sbi || 0;
+            document.getElementById('setting-uco').value = appState.settings.opening_balance_uco || 0;
+            document.getElementById('setting-present-sbi').value = appState.settings.present_balance_sbi || 0;
+            document.getElementById('setting-present-uco').value = appState.settings.present_balance_uco || 0;
+        }
+
+        function saveSettings() {
+            const settings = {
+                salary_amount: parseFloat(document.getElementById('setting-salary').value) || 0,
+                opening_balance_sbi: parseFloat(document.getElementById('setting-sbi').value) || 0,
+                opening_balance_uco: parseFloat(document.getElementById('setting-uco').value) || 0,
+                present_balance_sbi: parseFloat(document.getElementById('setting-present-sbi').value) || 0,
+                present_balance_uco: parseFloat(document.getElementById('setting-present-uco').value) || 0
+            };
+
+            if (settings.salary_amount < 0 || settings.opening_balance_sbi < 0 || settings.opening_balance_uco < 0 ||
+                settings.present_balance_sbi < 0 || settings.present_balance_uco < 0) {
+                showAlert('Values cannot be negative', 'error');
+                return;
+            }
+
+            showLoading();
+
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        loadAllData();
+                    } else {
+                        showAlert(result.message, 'error');
+                        hideLoading();
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    showAlert('Error: ' + error.message, 'error');
+                    hideLoading();
+                })
+                .updateSettings(settings);
+        }
+
+        // ========== ACTION FUNCTIONS ==========
+        function exportCSV() {
+            showLoading();
+
+            google.script.run
+                .withSuccessHandler(function(csv) {
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `Balance_Sheet_${getTodayDate()}.csv`;
+                    link.click();
+                    
+                    showAlert('CSV exported successfully! Check your downloads.', 'success');
+                    hideLoading();
+                })
+                .withFailureHandler(function(error) {
+                    showAlert('Error exporting CSV: ' + error.message, 'error');
+                    hideLoading();
+                })
+                .exportToCSV();
+        }
+
+        function resetAll() {
+            if (!confirm('⚠️ WARNING: This will DELETE ALL DATA!\n\nAre you absolutely sure?')) {
+                return;
+            }
+
+            if (!confirm('⚠️ FINAL WARNING: This action CANNOT be undone.\n\nAll transactions and settings will be reset to empty.\n\nProceed?')) {
+                return;
+            }
+
+            showLoading();
+
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        loadAllData();
+                    } else {
+                        showAlert(result.message, 'error');
+                        hideLoading();
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    showAlert('Error: ' + error.message, 'error');
+                    hideLoading();
+                })
+                .resetAllData();
+        }
+
+        // ========== FILTERS ==========
+        function clearFilters() {
+            document.getElementById('filter-bank').value = 'all';
+            document.getElementById('filter-date-from').value = '';
+            document.getElementById('filter-date-to').value = '';
+            loadTransactions();
+            showAlert('Filters cleared', 'info');
+        }
+
+        // ========== LOG APP INFO ==========
+        console.log('%c📊 BALANCE SHEET MANAGER v1.1', 'font-size:20px; font-weight:bold; color:#007bff;');
+        console.log('%cSBI/UCO Personal Finance Manager', 'font-size:12px; color:#666;');
+        console.log('%c✨ NEW: Present Balance Tracking', 'font-size:12px; color:#28a745; font-weight:bold;');
+    </script>
+</body>
+</html>
