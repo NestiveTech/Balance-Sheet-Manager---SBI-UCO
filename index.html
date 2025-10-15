@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Balance Sheet Manager - SBI/UCO</title>
+    <title>Balance Sheet Manager</title>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --primary: #667eea;
@@ -19,7 +16,6 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --info: #3b82f6;
             --dark: #1e293b;
             --light: #f1f5f9;
             --white: #ffffff;
@@ -34,7 +30,6 @@
             min-height: 100vh;
             padding: 2rem 1rem;
             line-height: 1.6;
-            color: var(--text-primary);
         }
 
         .container {
@@ -46,52 +41,30 @@
             overflow: hidden;
         }
 
-        /* HEADER */
         .header {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: var(--white);
             padding: 3rem 2rem;
             text-align: center;
-            position: relative;
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-        }
+        .header h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .header .subtitle { font-size: 1.2rem; opacity: 0.95; margin-bottom: 1rem; }
+        .header .meta { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-top: 1.5rem; font-size: 0.9rem; }
 
-        .header .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.95;
-            margin-bottom: 1rem;
-        }
-
-        .header .meta {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-            margin-top: 1.5rem;
-            font-size: 0.9rem;
-        }
-
-        /* LOADING - HIDDEN BY DEFAULT */
         .loading-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.85);
             backdrop-filter: blur(8px);
-            display: none; /* Changed from flex to none */
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
         }
 
-        .loading-overlay.show {
-            display: flex;
-        }
+        .loading-overlay.show { display: flex; }
 
         .spinner {
             width: 60px;
@@ -102,17 +75,10 @@
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .loading-overlay p {
-            color: var(--white);
-            margin-top: 1.5rem;
-            font-size: 1.1rem;
-        }
+        .loading-overlay p { color: var(--white); margin-top: 1.5rem; font-size: 1.1rem; }
 
-        /* ALERTS */
         .alert {
             padding: 1.25rem;
             border-radius: 0.75rem;
@@ -125,9 +91,8 @@
 
         .alert.success { background: #d1fae5; color: #065f46; border-color: var(--success); }
         .alert.error { background: #fee2e2; color: #991b1b; border-color: var(--danger); }
-        .alert.info { background: #dbeafe; color: #1e3a8a; border-color: var(--info); }
+        .alert.info { background: #dbeafe; color: #1e3a8a; border-color: #3b82f6; }
 
-        /* DASHBOARD */
         .dashboard {
             padding: 2rem;
             display: grid;
@@ -144,10 +109,7 @@
             transition: all 0.4s;
         }
 
-        .tile:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
+        .tile:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
 
         .tile.salary { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
         .tile.sbi-gross { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
@@ -158,252 +120,60 @@
         .tile.uco-present { background: linear-gradient(135deg, #fc6076 0%, #ff9a44 100%); border: 3px solid rgba(255,255,255,0.3); }
         .tile.combined-gross { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: var(--text-primary); }
         .tile.combined-net { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: var(--text-primary); }
-        .tile.combined-present { 
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); 
-            color: var(--text-primary); 
-            border: 4px solid #ff6b35; 
-        }
+        .tile.combined-present { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: var(--text-primary); border: 4px solid #ff6b35; }
 
-        .tile-label {
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .tile-label { font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .tile-value { font-size: 2.25rem; font-weight: 800; }
+        .tile-badge { display: inline-block; background: rgba(255,255,255,0.25); padding: 0.3rem 0.9rem; border-radius: 2rem; font-size: 0.7rem; margin-top: 0.75rem; font-weight: 700; text-transform: uppercase; }
 
-        .tile-value {
-            font-size: 2.25rem;
-            font-weight: 800;
-        }
+        .section { padding: 2rem; margin: 0 2rem 2rem; background: var(--light); border-radius: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .section-title { font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 3px solid var(--primary); }
 
-        .tile-badge {
-            display: inline-block;
-            background: rgba(255,255,255,0.25);
-            padding: 0.3rem 0.9rem;
-            border-radius: 2rem;
-            font-size: 0.7rem;
-            margin-top: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; }
+        .form-group input, .form-group select { padding: 0.875rem 1rem; border: 2px solid var(--border); border-radius: 0.5rem; font-size: 1rem; transition: all 0.3s; background: var(--white); font-family: inherit; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(102,126,234,0.1); }
 
-        /* SECTIONS */
-        .section {
-            padding: 2rem;
-            margin: 0 2rem 2rem;
-            background: var(--light);
-            border-radius: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
+        .error { color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem; }
 
-        .section-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 3px solid var(--primary);
-        }
-
-        /* FORMS */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .form-group input, .form-group select {
-            padding: 0.875rem 1rem;
-            border: 2px solid var(--border);
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            transition: all 0.3s;
-            background: var(--white);
-            font-family: inherit;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
-        }
-
-        .error {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        /* BUTTONS */
-        .btn {
-            padding: 0.875rem 1.75rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-family: inherit;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
+        .btn { padding: 0.875rem 1.75rem; border: none; border-radius: 0.5rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px; font-family: inherit; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
 
         .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: var(--white); }
         .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: var(--white); }
         .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: var(--white); }
         .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: var(--white); }
         .btn-secondary { background: linear-gradient(135deg, #64748b 0%, #475569 100%); color: var(--white); }
-        .btn-info { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: var(--white); }
 
-        .btn-group {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
+        .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn-sm { padding: 0.625rem 1.25rem; font-size: 0.85rem; }
 
-        .btn-sm {
-            padding: 0.625rem 1.25rem;
-            font-size: 0.85rem;
-        }
+        .table-container { overflow-x: auto; margin-top: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: var(--white); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: var(--white); padding: 1.25rem; text-align: left; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem; }
+        td { padding: 1.25rem; border-bottom: 1px solid var(--border); }
+        tr:hover { background: var(--light); }
 
-        /* TABLE */
-        .table-container {
-            overflow-x: auto;
-            margin-top: 1.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            background: var(--white);
-        }
+        .action-buttons { display: flex; gap: 0.75rem; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        .totals { background: var(--white); padding: 2rem; border-radius: 1rem; margin-top: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .total-row { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border); font-size: 1.1rem; }
+        .total-row:last-child { border-bottom: none; font-weight: 800; font-size: 1.5rem; color: var(--primary); padding-top: 1.5rem; margin-top: 1rem; border-top: 3px solid var(--primary); }
 
-        th {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: var(--white);
-            padding: 1.25rem;
-            text-align: left;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.85rem;
-        }
+        .preview { background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); padding: 1.5rem; border-radius: 0.75rem; margin-top: 1.5rem; border-left: 5px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .preview strong { color: var(--primary); font-size: 1.05rem; }
 
-        td {
-            padding: 1.25rem;
-            border-bottom: 1px solid var(--border);
-        }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-secondary); }
+        .empty-state-icon { font-size: 5rem; margin-bottom: 1.5rem; opacity: 0.3; }
+        .empty-state h3 { color: var(--text-primary); font-size: 1.5rem; margin-bottom: 0.75rem; font-weight: 700; }
 
-        tr:hover {
-            background: var(--light);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        /* TOTALS */
-        .totals {
-            background: var(--white);
-            padding: 2rem;
-            border-radius: 1rem;
-            margin-top: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 1.1rem;
-        }
-
-        .total-row:last-child {
-            border-bottom: none;
-            font-weight: 800;
-            font-size: 1.5rem;
-            color: var(--primary);
-            padding-top: 1.5rem;
-            margin-top: 1rem;
-            border-top: 3px solid var(--primary);
-        }
-
-        /* PREVIEW */
-        .preview {
-            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            margin-top: 1.5rem;
-            border-left: 5px solid var(--primary);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .preview strong {
-            color: var(--primary);
-            font-size: 1.05rem;
-        }
-
-        /* EMPTY STATE */
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-secondary);
-        }
-
-        .empty-state-icon {
-            font-size: 5rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.3;
-        }
-
-        .empty-state h3 {
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            margin-bottom: 0.75rem;
-            font-weight: 700;
-        }
-
-        /* FOOTER */
-        .footer {
-            background: var(--dark);
-            color: var(--white);
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .footer p {
-            opacity: 0.8;
-            font-size: 0.9rem;
-        }
+        .footer { background: var(--dark); color: var(--white); padding: 2rem; text-align: center; }
+        .footer p { opacity: 0.8; font-size: 0.9rem; }
 
         .text-center { text-align: center; }
         .mt-3 { margin-top: 1.5rem; }
 
-        /* RESPONSIVE */
         @media (max-width: 768px) {
             body { padding: 1rem 0.5rem; }
             .header { padding: 2rem 1.5rem; }
@@ -420,55 +190,51 @@
 </head>
 <body>
     <div class="container">
-        <!-- HEADER -->
         <div class="header">
             <h1>BALANCE SHEET – 2025</h1>
             <p class="subtitle">Personal Balance Sheet Manager (SBI/UCO)</p>
             <div class="meta">
                 <span>📊 Version 1.1</span>
-                <span>💾 LocalStorage</span>
-                <span id="lastUpdated">Loading...</span>
+                <span>☁️ Google Sheets</span>
+                <span id="sheetName">Loading...</span>
             </div>
         </div>
 
-        <!-- LOADING (HIDDEN) -->
         <div id="loadingOverlay" class="loading-overlay">
             <div class="spinner"></div>
             <p>Processing...</p>
         </div>
 
-        <!-- ALERT -->
         <div id="alert" class="alert"></div>
 
-        <!-- DASHBOARD -->
         <div class="dashboard">
             <div class="tile salary">
                 <div class="tile-label">💵 SALARY AMOUNT</div>
                 <div class="tile-value">₹<span id="tile-salary">0.00</span></div>
             </div>
             <div class="tile sbi-gross">
-                <div class="tile-label">🏦 SBI OPENING BALANCE</div>
+                <div class="tile-label">🏦 SBI OPENING</div>
                 <div class="tile-value">₹<span id="tile-sbi-gross">0.00</span></div>
             </div>
             <div class="tile sbi-net">
-                <div class="tile-label">📊 SBI NET BALANCE</div>
+                <div class="tile-label">📊 SBI NET</div>
                 <div class="tile-value">₹<span id="tile-sbi-net">0.00</span></div>
             </div>
             <div class="tile sbi-present">
-                <div class="tile-label">💰 SBI PRESENT BALANCE</div>
+                <div class="tile-label">💰 SBI PRESENT</div>
                 <div class="tile-value">₹<span id="tile-sbi-present">0.00</span></div>
                 <div class="tile-badge">Current</div>
             </div>
             <div class="tile uco-gross">
-                <div class="tile-label">🏦 UCO OPENING BALANCE</div>
+                <div class="tile-label">🏦 UCO OPENING</div>
                 <div class="tile-value">₹<span id="tile-uco-gross">0.00</span></div>
             </div>
             <div class="tile uco-net">
-                <div class="tile-label">📊 UCO NET BALANCE</div>
+                <div class="tile-label">📊 UCO NET</div>
                 <div class="tile-value">₹<span id="tile-uco-net">0.00</span></div>
             </div>
             <div class="tile uco-present">
-                <div class="tile-label">💰 UCO PRESENT BALANCE</div>
+                <div class="tile-label">💰 UCO PRESENT</div>
                 <div class="tile-value">₹<span id="tile-uco-present">0.00</span></div>
                 <div class="tile-badge">Current</div>
             </div>
@@ -477,17 +243,16 @@
                 <div class="tile-value">₹<span id="tile-combined-gross">0.00</span></div>
             </div>
             <div class="tile combined-net">
-                <div class="tile-label">📊 COMBINED NET BALANCE</div>
+                <div class="tile-label">📊 COMBINED NET</div>
                 <div class="tile-value">₹<span id="tile-combined-net">0.00</span></div>
             </div>
             <div class="tile combined-present">
-                <div class="tile-label">💰 COMBINED PRESENT BALANCE</div>
+                <div class="tile-label">💰 COMBINED PRESENT</div>
                 <div class="tile-value">₹<span id="tile-combined-present">0.00</span></div>
                 <div class="tile-badge">Total Current</div>
             </div>
         </div>
 
-        <!-- ADD TRANSACTION -->
         <div class="section">
             <h2 class="section-title">➕ Add Transaction</h2>
             <form id="addTransactionForm" onsubmit="handleAddTransaction(event)">
@@ -499,7 +264,7 @@
                     </div>
                     <div class="form-group">
                         <label>📝 Description *</label>
-                        <input type="text" id="input-description" placeholder="e.g., Grocery Shopping" required>
+                        <input type="text" id="input-description" placeholder="e.g., Grocery" required>
                         <span class="error" id="error-description"></span>
                     </div>
                     <div class="form-group">
@@ -518,7 +283,7 @@
                     </div>
                 </div>
                 <div class="btn-group">
-                    <button type="submit" class="btn btn-primary" id="submitBtn">✅ Add Transaction</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">✅ Add</button>
                     <button type="button" class="btn btn-secondary" onclick="clearForm()">🔄 Clear</button>
                 </div>
                 <div id="preview" class="preview" style="display:none;">
@@ -527,14 +292,13 @@
             </form>
         </div>
 
-        <!-- TRANSACTIONS -->
         <div class="section">
             <h2 class="section-title">📋 Transactions</h2>
             <div class="form-grid">
                 <div class="form-group">
                     <label>🏦 Filter</label>
                     <select id="filter-bank" onchange="loadTransactions()">
-                        <option value="all">All Banks</option>
+                        <option value="all">All</option>
                         <option value="sbi">SBI</option>
                         <option value="uco">UCO</option>
                     </select>
@@ -548,7 +312,7 @@
                     <input type="date" id="filter-date-to" onchange="loadTransactions()">
                 </div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="clearFilters()">🔄 Clear Filters</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearFilters()">🔄 Clear</button>
 
             <div class="table-container">
                 <table>
@@ -590,7 +354,6 @@
             </div>
         </div>
 
-        <!-- SETTINGS -->
         <div class="section">
             <h2 class="section-title">⚙️ Settings</h2>
             <div class="form-grid">
@@ -617,39 +380,26 @@
             </div>
             <div class="btn-group mt-3">
                 <button class="btn btn-primary" onclick="saveSettings()">💾 Save</button>
-                <button class="btn btn-success" onclick="exportJSON()">📥 Backup</button>
-                <button class="btn btn-info" onclick="importJSON()">📤 Import</button>
                 <button class="btn btn-warning" onclick="exportCSV()">📊 CSV</button>
                 <button class="btn btn-danger" onclick="resetAll()">🗑️ Reset</button>
             </div>
-            <input type="file" id="import-file" accept=".json" style="display:none;" onchange="handleFileImport(event)">
         </div>
 
-        <!-- FOOTER -->
         <div class="footer">
-            <p>💰 Balance Sheet Manager v1.1 Premium Edition</p>
-            <p style="margin-top: 0.5rem; opacity: 0.6;">Data stored locally • 100% private</p>
+            <p>💰 Balance Sheet Manager v1.1</p>
+            <p style="margin-top: 0.5rem; opacity: 0.6;">Powered by Google Sheets</p>
         </div>
     </div>
 
     <script>
         const appState = { settings: {}, transactions: [], editingIndex: null };
-        const STORAGE_KEY_SETTINGS = 'balanceSheetSettings';
-        const STORAGE_KEY_TRANSACTIONS = 'balanceSheetTransactions';
 
-        // INIT
         window.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initializing Balance Sheet Manager v1.1');
-            try {
-                document.getElementById('input-date').value = getTodayDate();
-                document.getElementById('input-amount').addEventListener('input', updatePreview);
-                document.getElementById('input-bank').addEventListener('input', updatePreview);
-                loadAllData();
-                console.log('✅ Initialization complete');
-            } catch (error) {
-                console.error('❌ Init error:', error);
-                showAlert('Error initializing app: ' + error.message, 'error');
-            }
+            console.log('🚀 Initializing...');
+            document.getElementById('input-date').value = getTodayDate();
+            document.getElementById('input-amount').addEventListener('input', updatePreview);
+            document.getElementById('input-bank').addEventListener('input', updatePreview);
+            loadAllData();
         });
 
         function getTodayDate() {
@@ -657,13 +407,8 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
 
-        function showLoading() {
-            document.getElementById('loadingOverlay').classList.add('show');
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.remove('show');
-        }
+        function showLoading() { document.getElementById('loadingOverlay').classList.add('show'); }
+        function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
 
         function showAlert(msg, type = 'success') {
             const alert = document.getElementById('alert');
@@ -679,51 +424,23 @@
             try {
                 const date = new Date(d + 'T00:00:00');
                 return date.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: '2-digit' });
-            } catch {
-                return d;
-            }
+            } catch { return d; }
         }
 
-        // STORAGE
-        function saveToLocalStorage() {
-            try {
-                localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(appState.settings));
-                localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(appState.transactions));
-                appState.settings.last_updated = new Date().toLocaleString('en-IN');
-                document.getElementById('lastUpdated').textContent = 'Updated: ' + appState.settings.last_updated;
-            } catch (error) {
-                console.error('Save error:', error);
-                showAlert('Error saving data', 'error');
-            }
-        }
-
-        function loadFromLocalStorage() {
-            try {
-                const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
-                const savedTransactions = localStorage.getItem(STORAGE_KEY_TRANSACTIONS);
-                
-                appState.settings = savedSettings ? JSON.parse(savedSettings) : {
-                    salary_amount: 0,
-                    opening_balance_sbi: 0,
-                    opening_balance_uco: 0,
-                    present_balance_sbi: 0,
-                    present_balance_uco: 0,
-                    last_updated: new Date().toLocaleString('en-IN')
-                };
-                
-                appState.transactions = savedTransactions ? JSON.parse(savedTransactions) : [];
-            } catch (error) {
-                console.error('Load error:', error);
-                appState.settings = { salary_amount: 0, opening_balance_sbi: 0, opening_balance_uco: 0, present_balance_sbi: 0, present_balance_uco: 0 };
-                appState.transactions = [];
-            }
-        }
-
-        // LOAD
         function loadAllData() {
-            loadFromLocalStorage();
-            populateSettings();
-            loadTransactions();
+            showLoading();
+            google.script.run
+                .withSuccessHandler(function(settings) {
+                    appState.settings = settings;
+                    document.getElementById('sheetName').textContent = settings.sheet_name || 'Sheet';
+                    populateSettings();
+                    loadTransactions();
+                })
+                .withFailureHandler(function(error) {
+                    showAlert('Error loading: ' + error.message, 'error');
+                    hideLoading();
+                })
+                .getSettings();
         }
 
         function loadTransactions() {
@@ -733,23 +450,20 @@
                 dateTo: document.getElementById('filter-date-to').value
             };
             
-            let filtered = appState.transactions;
-            
-            if (filters.bank && filters.bank !== 'all') {
-                filtered = filtered.filter(t => t.bank === filters.bank);
-            }
-            if (filters.dateFrom) {
-                filtered = filtered.filter(t => t.date >= filters.dateFrom);
-            }
-            if (filters.dateTo) {
-                filtered = filtered.filter(t => t.date <= filters.dateTo);
-            }
-            
-            calculateAndUpdate(filtered);
+            google.script.run
+                .withSuccessHandler(function(transactions) {
+                    appState.transactions = transactions;
+                    calculateAndUpdate();
+                    hideLoading();
+                })
+                .withFailureHandler(function(error) {
+                    showAlert('Error: ' + error.message, 'error');
+                    hideLoading();
+                })
+                .getTransactions(filters);
         }
 
-        // CALCULATE
-        function calculateAndUpdate(displayTransactions = appState.transactions) {
+        function calculateAndUpdate() {
             const total_sbi = appState.transactions.filter(t => t.bank === 'sbi').reduce((sum, t) => sum + t.amount, 0);
             const total_uco = appState.transactions.filter(t => t.bank === 'uco').reduce((sum, t) => sum + t.amount, 0);
             const gross_sbi = appState.settings.opening_balance_sbi || 0;
@@ -772,20 +486,18 @@
             document.getElementById('total-sbi').textContent = formatNumber(total_sbi);
             document.getElementById('total-uco').textContent = formatNumber(total_uco);
             document.getElementById('total-all').textContent = formatNumber(total_sbi + total_uco);
-            document.getElementById('lastUpdated').textContent = 'Updated: ' + (appState.settings.last_updated || '--');
 
-            renderTransactions(displayTransactions);
+            renderTransactions();
         }
 
-        // RENDER
-        function renderTransactions(transactions = appState.transactions) {
+        function renderTransactions() {
             const tbody = document.getElementById('transactionsBody');
             const emptyState = document.getElementById('emptyState');
             const tableContainer = document.querySelector('.table-container');
             
             tbody.innerHTML = '';
 
-            if (transactions.length === 0) {
+            if (appState.transactions.length === 0) {
                 tableContainer.style.display = 'none';
                 emptyState.style.display = 'block';
                 return;
@@ -794,7 +506,7 @@
             tableContainer.style.display = 'block';
             emptyState.style.display = 'none';
 
-            const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const sorted = [...appState.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             sorted.forEach((t, i) => {
                 const row = document.createElement('tr');
@@ -806,8 +518,8 @@
                     <td><span style="background:${t.bank === 'sbi' ? '#4facfe' : '#fa709a'}; color:white; padding:0.4rem 1rem; border-radius:2rem; font-weight:600; text-transform:uppercase; font-size:0.85rem;">${t.bank}</span></td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-primary btn-sm" onclick="editTransaction(${t.id})">✏️</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${t.id})">🗑️</button>
+                            <button class="btn btn-primary btn-sm" onclick="editTransaction(${t.index})">✏️</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${t.index})">🗑️</button>
                         </div>
                     </td>
                 `;
@@ -815,7 +527,6 @@
             });
         }
 
-        // TRANSACTIONS
         function handleAddTransaction(event) {
             event.preventDefault();
             const date = document.getElementById('input-date').value;
@@ -825,47 +536,52 @@
 
             if (!validateTransaction(date, description, amount, bank)) return;
 
-            const transaction = { 
-                id: appState.editingIndex !== null ? appState.editingIndex : Date.now(),
-                date, description, 
-                amount: parseFloat(amount), 
-                bank: bank.toLowerCase(),
-                timestamp: new Date().toLocaleString('en-IN')
-            };
+            const transaction = { date, description, amount: parseFloat(amount), bank: bank.toLowerCase() };
+            showLoading();
 
             if (appState.editingIndex !== null) {
-                const index = appState.transactions.findIndex(t => t.id === appState.editingIndex);
-                appState.transactions[index] = transaction;
-                showAlert('✅ Updated!', 'success');
+                google.script.run.withSuccessHandler(handleSuccess).withFailureHandler(handleError).updateTransaction(appState.editingIndex, transaction);
             } else {
-                appState.transactions.push(transaction);
-                showAlert('✅ Added!', 'success');
+                google.script.run.withSuccessHandler(handleSuccess).withFailureHandler(handleError).addTransaction(transaction);
             }
-
-            saveToLocalStorage();
-            clearForm();
-            loadTransactions();
         }
 
-        function editTransaction(id) {
-            const t = appState.transactions.find(t => t.id === id);
+        function handleSuccess(result) {
+            if (result.success) {
+                showAlert(result.message, 'success');
+                clearForm();
+                loadAllData();
+            } else {
+                showAlert(result.message, 'error');
+                hideLoading();
+            }
+        }
+
+        function handleError(error) {
+            showAlert('Error: ' + error.message, 'error');
+            hideLoading();
+        }
+
+        function editTransaction(index) {
+            const t = appState.transactions.find(t => t.index === index);
             if (!t) return;
             document.getElementById('input-date').value = t.date;
             document.getElementById('input-description').value = t.description;
             document.getElementById('input-amount').value = t.amount;
             document.getElementById('input-bank').value = t.bank;
-            appState.editingIndex = id;
+            appState.editingIndex = index;
             document.getElementById('submitBtn').textContent = '✅ Update';
             window.scrollTo({top: 0, behavior: 'smooth'});
             showAlert('Editing...', 'info');
         }
 
-        function deleteTransaction(id) {
-            if (!confirm('Delete this transaction?')) return;
-            appState.transactions = appState.transactions.filter(t => t.id !== id);
-            saveToLocalStorage();
-            showAlert('🗑️ Deleted!', 'success');
-            loadTransactions();
+        function deleteTransaction(index) {
+            if (!confirm('Delete?')) return;
+            showLoading();
+            google.script.run.withSuccessHandler(function(result) {
+                if (result.success) { showAlert(result.message, 'success'); loadAllData(); }
+                else { showAlert(result.message, 'error'); hideLoading(); }
+            }).withFailureHandler(handleError).deleteTransaction(index);
         }
 
         function validateTransaction(date, description, amount, bank) {
@@ -881,11 +597,9 @@
             document.getElementById('addTransactionForm').reset();
             document.getElementById('input-date').value = getTodayDate();
             appState.editingIndex = null;
-            document.getElementById('submitBtn').textContent = '✅ Add Transaction';
+            document.getElementById('submitBtn').textContent = '✅ Add';
             document.getElementById('preview').style.display = 'none';
-            ['date', 'description', 'amount', 'bank'].forEach(f => {
-                document.getElementById(`error-${f}`).textContent = '';
-            });
+            ['date', 'description', 'amount', 'bank'].forEach(f => { document.getElementById(`error-${f}`).textContent = ''; });
         }
 
         function updatePreview() {
@@ -898,14 +612,13 @@
                 let netUCO = (appState.settings.opening_balance_uco || 0) - total_uco;
                 if (bank === 'sbi') netSBI -= amount;
                 else netUCO -= amount;
-                document.getElementById('preview-text').innerHTML = `SBI: ₹${formatNumber(netSBI)} | UCO: ₹${formatNumber(netUCO)} | Total: ₹${formatNumber(netSBI + netUCO)}`;
+                document.getElementById('preview-text').innerHTML = `SBI: ₹${formatNumber(netSBI)} | UCO: ₹${formatNumber(netUCO)}`;
                 document.getElementById('preview').style.display = 'block';
             } else {
                 document.getElementById('preview').style.display = 'none';
             }
         }
 
-        // SETTINGS
         function populateSettings() {
             document.getElementById('setting-salary').value = appState.settings.salary_amount || 0;
             document.getElementById('setting-sbi').value = appState.settings.opening_balance_sbi || 0;
@@ -915,82 +628,41 @@
         }
 
         function saveSettings() {
-            appState.settings = {
+            const settings = {
                 salary_amount: parseFloat(document.getElementById('setting-salary').value) || 0,
                 opening_balance_sbi: parseFloat(document.getElementById('setting-sbi').value) || 0,
                 opening_balance_uco: parseFloat(document.getElementById('setting-uco').value) || 0,
                 present_balance_sbi: parseFloat(document.getElementById('setting-present-sbi').value) || 0,
                 present_balance_uco: parseFloat(document.getElementById('setting-present-uco').value) || 0
             };
-            saveToLocalStorage();
-            showAlert('💾 Saved!', 'success');
-            loadTransactions();
-        }
-
-        // EXPORT/IMPORT
-        function exportJSON() {
-            const data = { settings: appState.settings, transactions: appState.transactions, exportedAt: new Date().toISOString() };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `balance_sheet_${getTodayDate()}.json`;
-            link.click();
-            showAlert('📥 Exported!', 'success');
-        }
-
-        function importJSON() {
-            document.getElementById('import-file').click();
-        }
-
-        function handleFileImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (!confirm('Replace ALL data?')) return;
-                    appState.settings = data.settings;
-                    appState.transactions = data.transactions;
-                    saveToLocalStorage();
-                    loadAllData();
-                    showAlert('✅ Imported!', 'success');
-                } catch (error) {
-                    showAlert('❌ Invalid file!', 'error');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
+            showLoading();
+            google.script.run.withSuccessHandler(function(result) {
+                if (result.success) { showAlert(result.message, 'success'); loadAllData(); }
+                else { showAlert(result.message, 'error'); hideLoading(); }
+            }).withFailureHandler(handleError).updateSettings(settings);
         }
 
         function exportCSV() {
-            const total_sbi = appState.transactions.filter(t => t.bank === 'sbi').reduce((sum, t) => sum + t.amount, 0);
-            const total_uco = appState.transactions.filter(t => t.bank === 'uco').reduce((sum, t) => sum + t.amount, 0);
-            let csv = 'BALANCE SHEET REPORT\n\n';
-            csv += 'Date,Description,Amount,Bank\n';
-            appState.transactions.forEach(t => {
-                csv += `${t.date},"${t.description}",${t.amount},${t.bank.toUpperCase()}\n`;
-            });
-            csv += `\nTotal SBI,${formatNumber(total_sbi)}\n`;
-            csv += `Total UCO,${formatNumber(total_uco)}\n`;
-            csv += `Total All,${formatNumber(total_sbi + total_uco)}\n`;
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `Balance_Sheet_${getTodayDate()}.csv`;
-            link.click();
-            showAlert('📊 CSV exported!', 'success');
+            showLoading();
+            google.script.run.withSuccessHandler(function(csv) {
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `Balance_Sheet_${getTodayDate()}.csv`;
+                link.click();
+                showAlert('CSV exported!', 'success');
+                hideLoading();
+            }).withFailureHandler(handleError).exportToCSV();
         }
 
         function resetAll() {
             if (!confirm('Delete ALL data?')) return;
             if (!confirm('FINAL WARNING!')) return;
-            localStorage.clear();
-            appState.settings = { salary_amount: 0, opening_balance_sbi: 0, opening_balance_uco: 0, present_balance_sbi: 0, present_balance_uco: 0 };
-            appState.transactions = [];
-            loadAllData();
-            showAlert('🗑️ Reset complete!', 'success');
+            showLoading();
+            google.script.run.withSuccessHandler(function(result) {
+                if (result.success) { showAlert(result.message, 'success'); loadAllData(); }
+                else { showAlert(result.message, 'error'); hideLoading(); }
+            }).withFailureHandler(handleError).resetAllData();
         }
 
         function clearFilters() {
@@ -998,7 +670,7 @@
             document.getElementById('filter-date-from').value = '';
             document.getElementById('filter-date-to').value = '';
             loadTransactions();
-            showAlert('🔄 Filters cleared!', 'info');
+            showAlert('Filters cleared!', 'info');
         }
     </script>
 </body>
