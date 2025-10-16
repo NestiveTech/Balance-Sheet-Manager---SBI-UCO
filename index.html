@@ -7,15 +7,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Header -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- HEADER -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <header class="header">
         <div class="container">
             <h1 class="header-title">BALANCE SHEET — <span id="currentYear"></span></h1>
-            <p class="header-subtitle">SBI / UCO Bank Manager</p>
+            <p class="header-subtitle">SBI / UCO Bank Manager with Present Balance</p>
         </div>
     </header>
 
-    <!-- Navigation -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- NAVIGATION -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <nav class="nav">
         <div class="container">
             <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
@@ -25,43 +29,76 @@
     </nav>
 
     <main class="container">
-        <!-- Dashboard Page -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- DASHBOARD PAGE -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
         <div id="dashboard-page" class="page active">
             <div class="dashboard-grid">
+                <!-- Salary -->
                 <div class="tile tile-neutral">
                     <div class="tile-label">💰 Salary</div>
                     <div class="tile-value" id="salary-value">₹0.00</div>
                 </div>
+
+                <!-- SBI Section -->
                 <div class="tile tile-sbi">
-                    <div class="tile-label">🏦 SBI Bank Gross</div>
+                    <div class="tile-label">🏦 SBI Opening</div>
                     <div class="tile-value" id="sbi-gross-value">₹0.00</div>
                 </div>
+
                 <div class="tile tile-sbi">
-                    <div class="tile-label">💵 SBI Net Balance</div>
+                    <div class="tile-label">💳 SBI Present</div>
+                    <div class="tile-value" id="sbi-present-value">₹0.00</div>
+                </div>
+
+                <div class="tile tile-sbi">
+                    <div class="tile-label">💵 SBI Net</div>
                     <div class="tile-value" id="sbi-net-value">₹0.00</div>
                 </div>
+
+                <!-- UCO Section -->
                 <div class="tile tile-uco">
-                    <div class="tile-label">🏦 UCO Bank Gross</div>
+                    <div class="tile-label">🏦 UCO Opening</div>
                     <div class="tile-value" id="uco-gross-value">₹0.00</div>
                 </div>
+
                 <div class="tile tile-uco">
-                    <div class="tile-label">💵 UCO Net Balance</div>
+                    <div class="tile-label">💳 UCO Present</div>
+                    <div class="tile-value" id="uco-present-value">₹0.00</div>
+                </div>
+
+                <div class="tile tile-uco">
+                    <div class="tile-label">💵 UCO Net</div>
                     <div class="tile-value" id="uco-net-value">₹0.00</div>
                 </div>
+
+                <!-- Combined Section -->
                 <div class="tile tile-combined">
-                    <div class="tile-label">📈 Combined Gross</div>
+                    <div class="tile-label">📈 Combined Opening</div>
                     <div class="tile-value" id="combined-gross-value">₹0.00</div>
                 </div>
+
                 <div class="tile tile-combined">
-                    <div class="tile-label">💎 Combined Net</div>
+                    <div class="tile-label">💎 Combined Present</div>
+                    <div class="tile-value" id="combined-present-value">₹0.00</div>
+                </div>
+
+                <div class="tile tile-combined">
+                    <div class="tile-label">📊 Combined Net</div>
                     <div class="tile-value" id="combined-net-value">₹0.00</div>
                 </div>
             </div>
-            <div class="timestamp">⏰ Last Updated: <span id="last-updated">Never</span></div>
+
+            <div class="timestamp">
+                ⏰ Last Updated: <span id="last-updated">Never</span>
+            </div>
         </div>
 
-        <!-- Transactions Page -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- TRANSACTIONS PAGE -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
         <div id="transactions-page" class="page">
+            <!-- Quick Add Form -->
             <div class="card">
                 <h2>➕ Add New Transaction</h2>
                 <form id="quick-add-form" class="quick-add-form">
@@ -77,6 +114,7 @@
                 </form>
             </div>
 
+            <!-- Summary Strip -->
             <div class="summary-strip">
                 <div class="summary-item">
                     <span class="summary-label">Total Expenses:</span>
@@ -92,6 +130,7 @@
                 </div>
             </div>
 
+            <!-- Transactions Table -->
             <div class="table-container">
                 <table class="transactions-table">
                     <thead>
@@ -111,7 +150,9 @@
             </div>
         </div>
 
-        <!-- Settings Page -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SETTINGS PAGE -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
         <div id="settings-page" class="page">
             <div class="card">
                 <h2>⚙️ Financial Settings</h2>
@@ -120,16 +161,33 @@
                         <label for="salary-input">💰 Salary Amount</label>
                         <input type="number" id="salary-input" step="0.01" min="0" required>
                     </div>
+
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #00529B;">🏦 SBI Bank</h3>
+                    
                     <div class="form-group">
-                        <label for="sbi-opening-input">🏦 SBI Opening Balance</label>
+                        <label for="sbi-opening-input">Opening Balance</label>
                         <input type="number" id="sbi-opening-input" step="0.01" min="0" required>
                     </div>
+
                     <div class="form-group">
-                        <label for="uco-opening-input">🏦 UCO Opening Balance</label>
+                        <label for="sbi-present-input">Present Balance (Current Actual)</label>
+                        <input type="number" id="sbi-present-input" step="0.01" min="0" required>
+                    </div>
+
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #ED7D31;">🏦 UCO Bank</h3>
+                    
+                    <div class="form-group">
+                        <label for="uco-opening-input">Opening Balance</label>
                         <input type="number" id="uco-opening-input" step="0.01" min="0" required>
                     </div>
+
+                    <div class="form-group">
+                        <label for="uco-present-input">Present Balance (Current Actual)</label>
+                        <input type="number" id="uco-present-input" step="0.01" min="0" required>
+                    </div>
+
                     <div class="button-group">
-                        <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+                        <button type="submit" class="btn btn-primary">💾 Save All Settings</button>
                         <button type="button" class="btn btn-secondary" id="recalculate-btn">🔄 Recalculate</button>
                     </div>
                 </form>
@@ -140,17 +198,27 @@
                 <div class="button-group">
                     <button class="btn btn-secondary" id="export-btn">📤 Export to CSV</button>
                 </div>
+                <p class="help-text">Export includes all balances and transactions</p>
             </div>
         </div>
     </main>
 
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- LOADING OVERLAY -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="spinner"></div>
         <p>Processing...</p>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- TOAST NOTIFICATION -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <div id="toast" class="toast"></div>
 
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- EDIT MODAL -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h2>✏️ Edit Transaction</h2>
@@ -176,7 +244,7 @@
                     </select>
                 </div>
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary">💾 Save</button>
+                    <button type="submit" class="btn btn-primary">💾 Save Changes</button>
                     <button type="button" class="btn btn-secondary" id="cancel-edit-btn">❌ Cancel</button>
                 </div>
             </form>
