@@ -1,6 +1,10 @@
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
+// ═══════════════════════════════════════════════════════════════════════════
+// BALANCE SHEET MANAGER - COMPLETE JAVASCRIPT
+// Multi-User | Custom Banks | Hybrid Authentication
+// ═══════════════════════════════════════════════════════════════════════════
+
 // REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
-// const API_BASE_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
 
 let transactions = [];
 let dashboardData = {};
@@ -8,7 +12,7 @@ let currentUser = null;
 let userBanks = [];
 
 // ════════════════════════════════════════════════════════════
-// GOOGLE SIGN-IN
+// AUTHENTICATION - HYBRID (GOOGLE + EMAIL)
 // ════════════════════════════════════════════════════════════
 
 function handleCredentialResponse(response) {
@@ -21,7 +25,7 @@ function handleCredentialResponse(response) {
         picture: payload.picture
     };
     
-    console.log('User signed in:', currentUser);
+    console.log('✅ User signed in with Google:', currentUser.email);
     
     showLoading();
     initializeUser();
@@ -35,6 +39,7 @@ function parseJwt(token) {
     }).join(''));
     return JSON.parse(jsonPayload);
 }
+
 function handleSimpleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value.trim();
@@ -50,25 +55,23 @@ function handleSimpleLogin(e) {
         return;
     }
     
-    // Create user object
     currentUser = {
         email: email,
         name: name,
         picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2563eb&color=fff&size=128`
     };
     
-    console.log('User logged in with email:', currentUser);
+    console.log('✅ User logged in with email:', currentUser.email);
     
     showLoading();
     initializeUser();
 }
 
-// Add this to the window object at the end of the file
-window.handleSimpleLogin = handleSimpleLogin;
-
 function handleSignOut() {
     if (confirm('Sign out?')) {
-        google.accounts.id.disableAutoSelect();
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+            google.accounts.id.disableAutoSelect();
+        }
         document.getElementById('app-screen').style.display = 'none';
         document.getElementById('auth-screen').style.display = 'flex';
         currentUser = null;
@@ -688,8 +691,14 @@ function showToast(m, t='info') {
     setTimeout(() => toast.classList.remove('active'), 4000); 
 }
 
-// Global functions
+// ════════════════════════════════════════════════════════════
+// GLOBAL FUNCTIONS
+// ════════════════════════════════════════════════════════════
+
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;
 window.deleteBank = deleteBank;
 window.handleCredentialResponse = handleCredentialResponse;
+window.handleSimpleLogin = handleSimpleLogin;
+
+console.log('💰 Balance Sheet Manager loaded successfully!');
