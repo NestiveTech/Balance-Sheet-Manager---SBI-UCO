@@ -35,6 +35,36 @@ function parseJwt(token) {
     }).join(''));
     return JSON.parse(jsonPayload);
 }
+function handleSimpleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const name = document.getElementById('login-name').value.trim();
+    
+    if (!email || !email.includes('@')) {
+        showToast('❌ Please enter a valid email', 'error');
+        return;
+    }
+    
+    if (!name) {
+        showToast('❌ Please enter your name', 'error');
+        return;
+    }
+    
+    // Create user object
+    currentUser = {
+        email: email,
+        name: name,
+        picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2563eb&color=fff&size=128`
+    };
+    
+    console.log('User logged in with email:', currentUser);
+    
+    showLoading();
+    initializeUser();
+}
+
+// Add this to the window object at the end of the file
+window.handleSimpleLogin = handleSimpleLogin;
 
 function handleSignOut() {
     if (confirm('Sign out?')) {

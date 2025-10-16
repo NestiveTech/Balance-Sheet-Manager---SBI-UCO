@@ -9,20 +9,21 @@
 </head>
 <body>
     <!-- Auth Screen -->
-    <div id="auth-screen">
-        <div class="auth-container">
-            <div class="auth-logo">💰</div>
-            <h1 class="auth-title">Balance Sheet Manager</h1>
-            <p class="auth-subtitle">Multi-Bank Manager • Multi-User System</p>
-            <p class="auth-description">Add your own banks and manage finances easily</p>
-            
+<div id="auth-screen">
+    <div class="auth-container">
+        <div class="auth-logo">💰</div>
+        <h1 class="auth-title">Balance Sheet Manager</h1>
+        <p class="auth-subtitle">Multi-Bank Manager • Multi-User System</p>
+        <p class="auth-description">Add your own banks and manage finances easily</p>
+        
+        <!-- Google Sign-In (Primary) -->
+        <div style="margin: 2rem 0;">
             <div id="g_id_onload"
                  data-client_id="213013984719-bgrl6bil62nmt2b66d03tnq7ms0rage7.apps.googleusercontent.com"
                  data-context="signin"
-                 data-ux_mode="popup"
-                 data-callback="handleCredentialResponse"
-                 data-auto_prompt="false"
-                 data-itp_support="true">
+                 data-ux_mode="redirect"
+                 data-login_uri="https://nestivetech.github.io/Balance-Sheet-Manager---SBI-UCO/"
+                 data-auto_prompt="false">
             </div>
             
             <div class="g_id_signin"
@@ -35,7 +36,38 @@
                  data-width="350">
             </div>
         </div>
+
+        <div style="text-align: center; margin: 1.5rem 0; color: #94a3b8; font-weight: 500;">
+            OR
+        </div>
+
+        <!-- Simple Email Login (Fallback) -->
+        <form onsubmit="handleSimpleLogin(event)" style="margin-top: 1.5rem;">
+            <div style="margin-bottom: 1rem;">
+                <input type="text" 
+                       id="login-name" 
+                       placeholder="Your Name" 
+                       required
+                       style="width: 100%; padding: 0.875rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
+            </div>
+            <div style="margin-bottom: 1.25rem;">
+                <input type="email" 
+                       id="login-email" 
+                       placeholder="Your Email" 
+                       required
+                       style="width: 100%; padding: 0.875rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.875rem; font-size: 1rem;">
+                📧 Continue with Email
+            </button>
+        </form>
+        
+        <p style="margin-top: 1.25rem; font-size: 0.875rem; color: #64748b;">
+            Your data is stored securely in Google Sheets
+        </p>
     </div>
+</div>
+
 
     <!-- App Screen -->
     <div id="app-screen" style="display: none;">
