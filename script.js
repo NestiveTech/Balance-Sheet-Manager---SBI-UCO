@@ -1,188 +1,59 @@
-
-// REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
-
-
 // ═══════════════════════════════════════════════════════════════════════════
-// BALANCE SHEET MANAGER - MOBILE FIX (Fetch API)
-// Version 4.3 FINAL - Mobile Network Error Fixed
+// SINGLE-USER BALANCE SHEET - NO LOGIN (Your Logic)
+// Previous Balance + Salary = Opening Balance
+// Version: SINGLE-USER-PREV-BALANCE
 // ═══════════════════════════════════════════════════════════════════════════
-
-// Console cleanup
-(function() {
-    const originalWarn = console.warn;
-    const originalError = console.error;
-    
-    console.warn = function(...args) {
-        const msg = args.join(' ');
-        if (msg.includes('Slow network') || msg.includes('Fallback font') || 
-            msg.includes('Cross-Origin') || msg.includes('Intervention') || 
-            msg.includes('chrome-extension')) return;
-        originalWarn.apply(console, args);
-    };
-    
-    console.error = function(...args) {
-        const msg = args.join(' ');
-        if (msg.includes('Cross-Origin') || msg.includes('postMessage')) return;
-        originalError.apply(console, args);
-    };
-})();
-
-// Network monitoring
-window.addEventListener('online', () => {
-    console.log('✅ Network: Online');
-    if (currentUser) showToast('✅ Connection restored', 'success');
-});
-
-window.addEventListener('offline', () => {
-    console.log('⚠️ Network: Offline');
-    showToast('⚠️ No internet connection', 'warning');
-});
-
-function isOnline() {
-    return navigator.onLine;
-}
 
 // REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
 
 let transactions = [];
 let dashboardData = {};
-let currentUser = null;
 let userBanks = [];
 
 // ════════════════════════════════════════════════════════════
-// AUTHENTICATION
+// INITIALIZATION - NO LOGIN NEEDED
 // ════════════════════════════════════════════════════════════
 
-function handleCredentialResponse(response) {
-    const credential = response.credential;
-    const payload = parseJwt(credential);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('%c💰 Balance Sheet Manager', 'color: #2563eb; font-size: 20px; font-weight: bold;');
+    console.log('%c✅ Single-User | No Login | Previous Balance Logic', 'color: #16a34a; font-weight: bold;');
     
-    currentUser = {
-        email: payload.email,
-        name: payload.name,
-        picture: payload.picture
-    };
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+    document.getElementById('new-date').valueAsDate = new Date();
     
-    console.log('%c✅ User signed in', 'color: #16a34a; font-weight: bold;', currentUser.email);
+    setupListeners();
+    initialize();
+});
+
+async function initialize() {
     showLoading();
-    initializeUser();
-}
-
-function parseJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-}
-
-function handleSimpleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value.trim();
-    const name = document.getElementById('login-name').value.trim();
-    
-    if (!email || !email.includes('@')) {
-        showToast('❌ Please enter a valid email', 'error');
-        return;
-    }
-    
-    if (!name) {
-        showToast('❌ Please enter your name', 'error');
-        return;
-    }
-    
-    currentUser = {
-        email: email,
-        name: name,
-        picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2563eb&color=fff&size=128`
-    };
-    
-    console.log('%c✅ User logged in', 'color: #16a34a; font-weight: bold;', currentUser.email);
-    showLoading();
-    initializeUser();
-}
-
-function handleSignOut() {
-    if (confirm('Sign out?')) {
-        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-            google.accounts.id.disableAutoSelect();
-        }
-        document.getElementById('app-screen').style.display = 'none';
-        document.getElementById('auth-screen').style.display = 'flex';
-        currentUser = null;
-        userBanks = [];
-        showToast('👋 Signed out successfully', 'success');
-    }
-}
-
-async function initializeUser() {
-    if (!isOnline()) {
-        hideLoading();
-        showToast('⚠️ No internet connection', 'warning');
-        return;
-    }
-    
-    console.log('📡 API URL:', API_BASE_URL);
-    console.log('👤 User:', currentUser.email);
-    
     try {
-        const r = await apiCall('initUser');
+        await loadBanks();
+        await loadDashboard();
+        await loadTransactions();
+        await loadSettings();
         hideLoading();
-        
-        if (r.success) {
-            document.getElementById('user-name').textContent = currentUser.name;
-            document.getElementById('user-email').textContent = currentUser.email;
-            document.getElementById('user-avatar').src = currentUser.picture;
-            
-            if (r.sheetUrl) {
-                document.getElementById('sheet-link').href = r.sheetUrl;
-                document.getElementById('sheet-link').style.display = 'inline-flex';
-            }
-            
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-            document.getElementById('new-date').valueAsDate = new Date();
-            
-            setupListeners();
-            await loadBanks();
-            loadDashboard();
-            loadTransactions();
-            loadSettings();
-            
-            showToast(r.newUser ? '✅ Welcome! Spreadsheet created in your Drive!' : '✅ Welcome back!', 'success');
-        } else {
-            showToast('⚠️ ' + (r.error || 'Could not initialize'), 'warning');
-        }
+        showToast('✅ System loaded successfully!', 'success');
     } catch (e) {
         hideLoading();
-        console.error('❌ Init error:', e);
-        showToast('❌ ' + e.message + '\n\nCheck your deployment URL in script.js', 'error');
+        console.error('❌ Initialization error:', e);
+        showToast('❌ ' + e.message + '\n\nCheck your API_BASE_URL', 'error');
     }
 }
 
 // ════════════════════════════════════════════════════════════
-// API CALLS - FETCH API (MOBILE FRIENDLY)
+// API CALLS
 // ════════════════════════════════════════════════════════════
 
 async function apiCall(action, params = {}) {
-    if (!isOnline()) {
-        throw new Error('No internet connection');
-    }
-    
     const url = new URL(API_BASE_URL);
     url.searchParams.set('action', action);
     url.searchParams.set('_t', Date.now());
     
-    if (currentUser) {
-        url.searchParams.set('userEmail', currentUser.email);
-    }
-    
     Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
     
-    console.log(`📡 Calling: ${action}`);
+    console.log(`📡 API: ${action}`);
     
     try {
         const response = await fetch(url.toString(), {
@@ -323,7 +194,7 @@ async function deleteBank(bankCode) {
 }
 
 // ════════════════════════════════════════════════════════════
-// DASHBOARD
+// DASHBOARD - YOUR LOGIC (PREVIOUS BALANCE + SALARY)
 // ════════════════════════════════════════════════════════════
 
 async function loadDashboard() {
@@ -363,7 +234,6 @@ function renderDashboard() {
     });
     
     document.getElementById('combined-opening').textContent = formatCurrency(dashboardData.combined_opening);
-    document.getElementById('combined-total').textContent = formatCurrency(dashboardData.combined_total);
     document.getElementById('combined-expenses').textContent = formatCurrency(dashboardData.combined_expenses);
     document.getElementById('combined-net').textContent = formatCurrency(dashboardData.combined_net);
     
@@ -380,13 +250,38 @@ function createBankSection(bankCode, bank) {
     header.style.color = 'white';
     header.innerHTML = `
         <h2>🏦 ${bank.name.toUpperCase()}</h2>
-        <p>Opening - Expenses = Net</p>
+        <p>Previous Balance ${bank.salary_received > 0 ? '+ Salary' : ''} - Expenses = Net Balance</p>
     `;
     
     const tiles = document.createElement('div');
     tiles.className = 'dashboard-section';
-    tiles.innerHTML = `
+    
+    // Show Previous Balance tile
+    let tilesHTML = `
         <div class="tile" style="border-left-color: ${bank.color};">
+            <div class="tile-icon">📅</div>
+            <div class="tile-content">
+                <div class="tile-label">Previous Balance</div>
+                <div class="tile-value">${formatCurrency(bank.previous_balance)}</div>
+            </div>
+        </div>
+    `;
+    
+    // Show Salary tile only for SBI
+    if (bank.salary_received > 0) {
+        tilesHTML += `
+        <div class="tile" style="border-left-color: ${bank.color};">
+            <div class="tile-icon">💰</div>
+            <div class="tile-content">
+                <div class="tile-label">+ Salary</div>
+                <div class="tile-value" style="color: #16a34a;">${formatCurrency(bank.salary_received)}</div>
+            </div>
+        </div>
+        `;
+    }
+    
+    tilesHTML += `
+        <div class="tile tile-highlight" style="border-color: ${bank.color};">
             <div class="tile-icon">🏦</div>
             <div class="tile-content">
                 <div class="tile-label">Opening Balance</div>
@@ -408,6 +303,8 @@ function createBankSection(bankCode, bank) {
             </div>
         </div>
     `;
+    
+    tiles.innerHTML = tilesHTML;
     
     section.appendChild(header);
     section.appendChild(tiles);
@@ -579,7 +476,7 @@ async function deleteTransaction(id) {
 }
 
 // ════════════════════════════════════════════════════════════
-// SETTINGS
+// SETTINGS - PREVIOUS BALANCES
 // ════════════════════════════════════════════════════════════
 
 async function loadSettings() {
@@ -588,14 +485,14 @@ async function loadSettings() {
         const r = await apiCall('getSettings');
         if (r.success && r.data) {
             document.getElementById('salary-input').value = r.data.salary_amount || 0;
+            renderBankSettings(r.data);
         }
-        renderBankSettings();
     } catch (e) {
         console.log('Settings load error:', e);
     }
 }
 
-function renderBankSettings() {
+function renderBankSettings(settings) {
     const container = document.getElementById('banks-settings');
     container.innerHTML = userBanks.map(bank => `
         <div class="bank-settings-group">
@@ -604,8 +501,9 @@ function renderBankSettings() {
                 <button class="btn btn-danger" onclick="deleteBank('${bank.code}')" style="float: right; font-size: 0.8rem; padding: 0.4rem 0.8rem;">Delete</button>
             </h3>
             <div class="form-group">
-                <label for="opening-${bank.code}">Opening Balance</label>
-                <input type="number" id="opening-${bank.code}" step="0.01" min="0" value="${bank.opening_balance}" required>
+                <label for="previous-${bank.code}">Previous Balance (Last Month's Net)</label>
+                <input type="number" id="previous-${bank.code}" step="0.01" min="0" value="${settings[`previous_balance_${bank.code}`] || 0}" required>
+                <small style="color: #64748b;">This becomes Opening Balance ${bank.code.toLowerCase() === 'sbi' ? '+ Salary' : ''}</small>
             </div>
         </div>
     `).join('');
@@ -619,8 +517,8 @@ async function handleSaveSettings(e) {
         const params = { salary_amount: document.getElementById('salary-input').value };
         
         userBanks.forEach(bank => {
-            const input = document.getElementById(`opening-${bank.code}`);
-            if (input) params[`opening_balance_${bank.code}`] = input.value;
+            const input = document.getElementById(`previous-${bank.code}`);
+            if (input) params[`previous_balance_${bank.code}`] = input.value;
         });
         
         const r = await apiCall('updateSettings', params);
@@ -639,7 +537,7 @@ async function handleSaveSettings(e) {
 }
 
 async function handleRollover() {
-    if (!confirm('📅 Rollover to next month?')) return;
+    if (!confirm('📅 Rollover to next month?\n\nThis will set Previous Balances to current Net Balances.')) return;
     
     showLoading();
     try {
@@ -647,10 +545,10 @@ async function handleRollover() {
         hideLoading();
         
         if (r.success) {
-            let msg = '✅ Rolled over!\n\n';
-            Object.keys(r.newBalances).forEach(code => {
+            let msg = '✅ Month rolled over!\n\nNew Previous Balances:\n';
+            Object.keys(r.newPreviousBalances).forEach(code => {
                 const bank = userBanks.find(b => b.code === code);
-                if (bank) msg += `${bank.name}: ₹${r.newBalances[code].toFixed(2)}\n`;
+                if (bank) msg += `${bank.name}: ₹${r.newPreviousBalances[code].toFixed(2)}\n`;
             });
             showToast(msg, 'success');
             setTimeout(() => { loadSettings(); loadDashboard(); }, 1000);
@@ -726,8 +624,5 @@ function showToast(m, t='info') {
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;
 window.deleteBank = deleteBank;
-window.handleCredentialResponse = handleCredentialResponse;
-window.handleSimpleLogin = handleSimpleLogin;
 
-console.log('%c💰 Balance Sheet v4.3', 'color: #2563eb; font-size: 18px; font-weight: bold;');
-console.log('%c✅ Mobile Fix | Fetch API', 'color: #16a34a; font-weight: bold;');
+console.log('%c✅ Ready!', 'color: #16a34a; font-size: 14px; font-weight: bold;');
