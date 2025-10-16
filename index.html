@@ -12,7 +12,7 @@
             <div class="header-content">
                 <div>
                     <h1 class="header-title">BALANCE SHEET — <span id="currentYear"></span></h1>
-                    <p class="header-subtitle">Previous Balance + Salary = Opening Balance</p>
+                    <p class="header-subtitle">Previous Balance + Monthly Input = Opening Balance</p>
                 </div>
                 <a href="#" class="spreadsheet-link" id="sheet-link" target="_blank" style="display: none;">
                     📊 View Spreadsheet
@@ -35,7 +35,7 @@
             <!-- Salary Section -->
             <div class="section-header salary-header">
                 <h2>💰 SALARY INFORMATION</h2>
-                <p>Salary is added to SBI Opening Balance</p>
+                <p>Salary is stored for reference only</p>
             </div>
             <div class="dashboard-section salary-section">
                 <div class="tile tile-neutral tile-large">
@@ -130,13 +130,13 @@
                 <h2>⚙️ Financial Settings</h2>
                 <form id="settings-form" class="settings-form">
                     <div class="form-group">
-                        <label for="salary-input">💰 Monthly Salary (Goes to SBI)</label>
+                        <label for="salary-input">💰 Monthly Salary (Stored Only)</label>
                         <input type="number" id="salary-input" step="0.01" min="0" required>
-                        <small style="color: #64748b;">This amount is added to SBI Opening Balance</small>
+                        <small style="color: #64748b;">This amount is stored for reference only</small>
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem 0;">
-                        <h3 style="margin: 0;">🏦 Your Banks - Previous Balances</h3>
+                        <h3 style="margin: 0;">🏦 Your Banks - Previous Balance + Monthly Input</h3>
                         <button type="button" class="btn btn-primary" id="add-bank-btn">➕ Add Bank</button>
                     </div>
 

@@ -6,18 +6,25 @@
 
 // REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
+// ═══════════════════════════════════════════════════════════════════════════
+// BALANCE SHEET MANAGER - FINAL VERSION
+// Previous Balance + Monthly Input = Opening Balance
+// ═══════════════════════════════════════════════════════════════════════════
+
+// REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
+// const API_BASE_URL = 'YOUR_DEPLOYMENT_URL_HERE';
 
 let transactions = [];
 let dashboardData = {};
 let userBanks = [];
 
 // ════════════════════════════════════════════════════════════
-// INITIALIZATION - NO LOGIN NEEDED
+// INITIALIZATION
 // ════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('%c💰 Balance Sheet Manager', 'color: #2563eb; font-size: 20px; font-weight: bold;');
-    console.log('%c✅ Single-User | No Login | Previous Balance Logic', 'color: #16a34a; font-weight: bold;');
+    console.log('%c✅ Previous + Input Logic', 'color: #16a34a; font-weight: bold;');
     
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     document.getElementById('new-date').valueAsDate = new Date();
@@ -103,7 +110,6 @@ function switchPage(p) {
     else if (p === 'transactions') loadTransactions();
     else if (p === 'settings') { loadSettings(); loadBanks(); }
 }
-
 // ════════════════════════════════════════════════════════════
 // BANKS
 // ════════════════════════════════════════════════════════════
@@ -194,7 +200,7 @@ async function deleteBank(bankCode) {
 }
 
 // ════════════════════════════════════════════════════════════
-// DASHBOARD - YOUR LOGIC (PREVIOUS BALANCE + SALARY)
+// DASHBOARD - PREVIOUS + INPUT LOGIC
 // ════════════════════════════════════════════════════════════
 
 async function loadDashboard() {
@@ -250,13 +256,13 @@ function createBankSection(bankCode, bank) {
     header.style.color = 'white';
     header.innerHTML = `
         <h2>🏦 ${bank.name.toUpperCase()}</h2>
-        <p>Previous Balance ${bank.salary_received > 0 ? '+ Salary' : ''} - Expenses = Net Balance</p>
+        <p>Previous Balance + Monthly Input - Expenses = Net Balance</p>
     `;
     
     const tiles = document.createElement('div');
     tiles.className = 'dashboard-section';
     
-    // Show Previous Balance tile
+    // Show all 5 tiles: Previous, Input, Opening, Expenses, Net
     let tilesHTML = `
         <div class="tile" style="border-left-color: ${bank.color};">
             <div class="tile-icon">📅</div>
@@ -265,22 +271,13 @@ function createBankSection(bankCode, bank) {
                 <div class="tile-value">${formatCurrency(bank.previous_balance)}</div>
             </div>
         </div>
-    `;
-    
-    // Show Salary tile only for SBI
-    if (bank.salary_received > 0) {
-        tilesHTML += `
         <div class="tile" style="border-left-color: ${bank.color};">
-            <div class="tile-icon">💰</div>
+            <div class="tile-icon">➕</div>
             <div class="tile-content">
-                <div class="tile-label">+ Salary</div>
-                <div class="tile-value" style="color: #16a34a;">${formatCurrency(bank.salary_received)}</div>
+                <div class="tile-label">Monthly Input</div>
+                <div class="tile-value" style="color: #16a34a;">${formatCurrency(bank.monthly_input)}</div>
             </div>
         </div>
-        `;
-    }
-    
-    tilesHTML += `
         <div class="tile tile-highlight" style="border-color: ${bank.color};">
             <div class="tile-icon">🏦</div>
             <div class="tile-content">
@@ -474,9 +471,8 @@ async function deleteTransaction(id) {
         showToast('❌ ' + e.message, 'error');
     }
 }
-
 // ════════════════════════════════════════════════════════════
-// SETTINGS - PREVIOUS BALANCES
+// SETTINGS - PREVIOUS + INPUT LOGIC
 // ════════════════════════════════════════════════════════════
 
 async function loadSettings() {
@@ -500,10 +496,29 @@ function renderBankSettings(settings) {
                 🏦 ${bank.name}
                 <button class="btn btn-danger" onclick="deleteBank('${bank.code}')" style="float: right; font-size: 0.8rem; padding: 0.4rem 0.8rem;">Delete</button>
             </h3>
+            
             <div class="form-group">
-                <label for="previous-${bank.code}">Previous Balance (Last Month's Net)</label>
-                <input type="number" id="previous-${bank.code}" step="0.01" min="0" value="${settings[`previous_balance_${bank.code}`] || 0}" required>
-                <small style="color: #64748b;">This becomes Opening Balance ${bank.code.toLowerCase() === 'sbi' ? '+ Salary' : ''}</small>
+                <label for="previous-${bank.code}">📅 Previous Balance (Last Month's Net)</label>
+                <input type="number" id="previous-${bank.code}" step="0.01" value="${settings[`previous_balance_${bank.code}`] || 0}" readonly disabled style="background: #f1f5f9; cursor: not-allowed; color: #64748b;">
+                <small style="color: #64748b;">Auto-updated on rollover - Do not edit</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="input-${bank.code}">➕ Monthly Input</label>
+                <input type="number" id="input-${bank.code}" step="0.01" min="0" value="${settings[`monthly_input_${bank.code}`] || 0}" required>
+                <small style="color: #64748b;">Add this amount to previous balance this month</small>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 1.25rem; border-radius: 12px; margin-top: 1rem; border: 2px solid ${bank.color};">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="color: #1e40af; font-size: 1rem;">Opening Balance:</strong>
+                    <span style="font-size: 1.5rem; font-weight: 700; color: ${bank.color};">
+                        ₹${((parseFloat(settings[`previous_balance_${bank.code}`]) || 0) + (parseFloat(settings[`monthly_input_${bank.code}`]) || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </span>
+                </div>
+                <small style="display: block; color: #64748b; margin-top: 0.5rem; text-align: right;">
+                    (${formatCurrency(settings[`previous_balance_${bank.code}`] || 0)} + ${formatCurrency(settings[`monthly_input_${bank.code}`] || 0)})
+                </small>
             </div>
         </div>
     `).join('');
@@ -516,16 +531,17 @@ async function handleSaveSettings(e) {
     try {
         const params = { salary_amount: document.getElementById('salary-input').value };
         
+        // ✅ Save MONTHLY INPUTS (previous balances are auto-updated on rollover)
         userBanks.forEach(bank => {
-            const input = document.getElementById(`previous-${bank.code}`);
-            if (input) params[`previous_balance_${bank.code}`] = input.value;
+            const input = document.getElementById(`input-${bank.code}`);
+            if (input) params[`monthly_input_${bank.code}`] = input.value;
         });
         
         const r = await apiCall('updateSettings', params);
         hideLoading();
         
         if (r.success) {
-            showToast('✅ Saved!', 'success');
+            showToast('✅ Settings saved!', 'success');
             setTimeout(() => loadDashboard(), 500);
         } else {
             showToast('❌ ' + r.error, 'error');
@@ -537,7 +553,7 @@ async function handleSaveSettings(e) {
 }
 
 async function handleRollover() {
-    if (!confirm('📅 Rollover to next month?\n\nThis will set Previous Balances to current Net Balances.')) return;
+    if (!confirm('📅 Rollover to next month?\n\nThis will:\n✅ Save Net Balances as Previous Balances\n✅ Reset Monthly Inputs to ₹0\n\nContinue?')) return;
     
     showLoading();
     try {
@@ -545,11 +561,13 @@ async function handleRollover() {
         hideLoading();
         
         if (r.success) {
-            let msg = '✅ Month rolled over!\n\nNew Previous Balances:\n';
+            let msg = '✅ Month rolled over successfully!\n\n';
+            msg += '📅 New Previous Balances:\n';
             Object.keys(r.newPreviousBalances).forEach(code => {
                 const bank = userBanks.find(b => b.code === code);
-                if (bank) msg += `${bank.name}: ₹${r.newPreviousBalances[code].toFixed(2)}\n`;
+                if (bank) msg += `  ${bank.name}: ₹${r.newPreviousBalances[code].toFixed(2)}\n`;
             });
+            msg += '\n➕ Monthly Inputs: Reset to ₹0.00';
             showToast(msg, 'success');
             setTimeout(() => { loadSettings(); loadDashboard(); }, 1000);
         } else {
@@ -626,3 +644,4 @@ window.deleteTransaction = deleteTransaction;
 window.deleteBank = deleteBank;
 
 console.log('%c✅ Ready!', 'color: #16a34a; font-size: 14px; font-weight: bold;');
+console.log('%cFormula: Opening = Previous + Input', 'color: #2563eb; font-size: 12px;');
