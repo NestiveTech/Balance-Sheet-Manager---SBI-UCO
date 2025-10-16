@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- AUTH SCREEN (Login) -->
+    <!-- AUTH SCREEN -->
     <div id="auth-screen" class="auth-screen">
         <div class="auth-container">
             <div class="auth-header">
@@ -40,7 +40,7 @@
                     <strong style="color: #1e40af; display: block; margin-bottom: 0.75rem;">🔒 Privacy Features:</strong>
                     <ul style="margin: 0; padding-left: 1.5rem; color: #64748b; font-size: 0.9rem; line-height: 1.8;">
                         <li>One spreadsheet per user in THEIR Drive</li>
-                        <li>No master registry or shared database</li>
+                        <li>Auto-formatted with all sheets</li>
                         <li>Complete data isolation</li>
                         <li>You own 100% of your data</li>
                     </ul>
@@ -53,45 +53,44 @@
         </div>
     </div>
 
-    <!-- APP SCREEN (After Login) -->
+    <!-- APP SCREEN -->
     <div id="app-screen" style="display: none;">
-        <!-- SETUP SCREEN (One-Click) -->
-<div id="setup-screen" style="display: none;">
-    <div class="setup-container">
-        <div class="setup-card">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
-                <h1 style="color: #2563eb; margin-bottom: 0.5rem;">Welcome to Balance Sheet Manager!</h1>
-                <p style="color: #64748b; font-size: 1.1rem;">
-                    Let's create your personal spreadsheet
-                </p>
+        <!-- SETUP SCREEN -->
+        <div id="setup-screen" style="display: none;">
+            <div class="setup-container">
+                <div class="setup-card">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+                        <h1 style="color: #2563eb; margin-bottom: 0.5rem;">Welcome to Balance Sheet Manager!</h1>
+                        <p style="color: #64748b; font-size: 1.1rem;">
+                            Let's create your personal spreadsheet
+                        </p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #2563eb;">
+                        <h3 style="color: #1e40af; margin-bottom: 1rem;">🔐 What You'll Get:</h3>
+                        <ul style="margin: 0; padding-left: 1.5rem; color: #64748b; line-height: 2;">
+                            <li>Personal spreadsheet in YOUR Google Drive</li>
+                            <li>Pre-formatted with all necessary sheets</li>
+                            <li>Default banks (SBI & UCO) - you can add more</li>
+                            <li>Full ownership and control of your data</li>
+                            <li>Instant access to dashboard</li>
+                        </ul>
+                    </div>
+                    
+                    <button onclick="handleCreateSpreadsheet()" class="btn btn-primary" style="width: 100%; padding: 1.25rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                        <span style="font-size: 1.5rem;">📄</span>
+                        Create My Spreadsheet
+                    </button>
+                    
+                    <p style="text-align: center; color: #64748b; margin-top: 1.5rem; font-size: 0.9rem;">
+                        ⏱️ Takes less than 5 seconds • No configuration needed
+                    </p>
+                </div>
             </div>
-            
-            <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #2563eb;">
-                <h3 style="color: #1e40af; margin-bottom: 1rem;">🔐 What You'll Get:</h3>
-                <ul style="margin: 0; padding-left: 1.5rem; color: #64748b; line-height: 2;">
-                    <li>Personal spreadsheet in YOUR Google Drive</li>
-                    <li>Pre-formatted with all necessary sheets</li>
-                    <li>Default banks (SBI & UCO) - you can add more</li>
-                    <li>Full ownership and control of your data</li>
-                    <li>Instant access to dashboard</li>
-                </ul>
-            </div>
-            
-            <button onclick="handleCreateSpreadsheet()" class="btn btn-primary" style="width: 100%; padding: 1.25rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
-                <span style="font-size: 1.5rem;">📄</span>
-                Create My Spreadsheet
-            </button>
-            
-            <p style="text-align: center; color: #64748b; margin-top: 1.5rem; font-size: 0.9rem;">
-                ⏱️ Takes less than 5 seconds • No configuration needed
-            </p>
         </div>
-    </div>
-</div>
 
-
-        <!-- MAIN APP (Existing users) -->
+        <!-- MAIN APP -->
         <div id="main-app" style="display: none;">
             <header class="header">
                 <div class="container">

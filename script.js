@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// OPTION 2: USER CREATES THEIR OWN SPREADSHEET
+// MULTI-USER BALANCE SHEET - AUTO-CREATE + LOCKED PREVIOUS BALANCE
 // ═══════════════════════════════════════════════════════════════════════════
 
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyEg5rdUs9X9UGC6vUg18Mxgvld7rG17JdG3BhOr72tDMAkrljcIoj2ALAwaFWx-nD2/exec';
@@ -29,14 +29,12 @@ function handleCredentialResponse(response) {
     document.getElementById('user-email').textContent = currentUser.email;
     document.getElementById('user-avatar').src = currentUser.picture;
     
-    // Hide auth screen, show app screen
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     
     showLoading();
-    checkUserSetup();  // ✅ CORRECT - Checks if user has spreadsheet
+    checkUserSetup();
 }
-
 
 function parseJwt(token) {
     const base64Url = token.split('.')[1];
@@ -63,11 +61,8 @@ async function checkUserSetup() {
         const r = await apiCall('checkUser');
         hideLoading();
         
-        console.log('✅ Check result:', r);
-        
         if (r.success) {
             if (r.hasSpreadsheet) {
-                // User already has spreadsheet
                 document.getElementById('setup-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
                 
@@ -79,8 +74,6 @@ async function checkUserSetup() {
                 initializeApp();
                 showToast('✅ Welcome back!', 'success');
             } else {
-                // Show setup screen
-                console.log('📋 Showing setup screen');
                 document.getElementById('setup-screen').style.display = 'flex';
                 document.getElementById('main-app').style.display = 'none';
             }
@@ -89,10 +82,11 @@ async function checkUserSetup() {
         }
     } catch (e) {
         hideLoading();
-        console.error('❌ Check error:', e);
+        console.error('Check error:', e);
         showToast('❌ ' + e.message, 'error');
     }
 }
+
 async function handleCreateSpreadsheet() {
     showLoading();
     
@@ -103,24 +97,15 @@ async function handleCreateSpreadsheet() {
         if (r.success) {
             showToast('✅ ' + r.message, 'success');
             
-            // Update sheet link
             if (r.sheetUrl) {
                 document.getElementById('sheet-link').href = r.sheetUrl;
                 document.getElementById('sheet-link').style.display = 'inline-flex';
             }
             
-            // Hide setup, show main app
             document.getElementById('setup-screen').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
             
-            // Initialize the app
             initializeApp();
-            
-            // Show success message with spreadsheet link
-            setTimeout(() => {
-                showToast(`✅ Spreadsheet created!\n\n📊 View it here:\n${r.sheetUrl}`, 'success');
-            }, 1000);
-            
         } else {
             showToast('❌ ' + r.error, 'error');
         }
@@ -129,58 +114,6 @@ async function handleCreateSpreadsheet() {
         console.error('Create error:', e);
         showToast('❌ Failed to create spreadsheet: ' + e.message, 'error');
     }
-}
-
-// Add to global functions
-window.handleCreateSpreadsheet = handleCreateSpreadsheet;
-
-
-function showSetupScreen() {
-    document.getElementById('setup-screen').style.display = 'flex';
-    document.getElementById('main-app').style.display = 'none';
-}
-
-async function handleSetupSubmit() {
-    const sheetUrl = document.getElementById('sheet-url-input').value.trim();
-    
-    if (!sheetUrl) {
-        showToast('❌ Please enter a spreadsheet URL', 'error');
-        return;
-    }
-    
-    showLoading();
-    try {
-        const r = await apiCall('registerSheet', { sheetUrl });
-        hideLoading();
-        
-        if (r.success) {
-            showToast('✅ Spreadsheet registered successfully!', 'success');
-            
-            if (r.sheetUrl) {
-                document.getElementById('sheet-link').href = r.sheetUrl;
-                document.getElementById('sheet-link').style.display = 'inline-flex';
-            }
-            
-            document.getElementById('setup-screen').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            
-            initializeApp();
-        } else {
-            showToast('❌ ' + r.error, 'error');
-        }
-    } catch (e) {
-        hideLoading();
-        showToast('❌ ' + e.message, 'error');
-    }
-}
-
-function copyAppEmail() {
-    const email = document.getElementById('app-email').textContent;
-    navigator.clipboard.writeText(email).then(() => {
-        showToast('✅ Email copied to clipboard!', 'success');
-    }).catch(() => {
-        showToast('⚠️ Could not copy. Please copy manually.', 'warning');
-    });
 }
 
 async function initializeApp() {
@@ -417,7 +350,7 @@ function createBankSection(bankCode, bank) {
     const tiles = document.createElement('div');
     tiles.className = 'dashboard-section';
     
-    let tilesHTML = `
+    tiles.innerHTML = `
         <div class="tile" style="border-left-color: ${bank.color};">
             <div class="tile-icon">📅</div>
             <div class="tile-content">
@@ -455,8 +388,6 @@ function createBankSection(bankCode, bank) {
         </div>
     `;
     
-    tiles.innerHTML = tilesHTML;
-    
     section.appendChild(header);
     section.appendChild(tiles);
     return section;
@@ -471,7 +402,7 @@ function adjustColor(color, amount) {
 }
 
 // ════════════════════════════════════════════════════════════
-// TRANSACTIONS (Same as before - keeping for completeness)
+// TRANSACTIONS
 // ════════════════════════════════════════════════════════════
 
 async function loadTransactions() {
@@ -627,7 +558,7 @@ async function deleteTransaction(id) {
 }
 
 // ════════════════════════════════════════════════════════════
-// SETTINGS
+// SETTINGS (WITH ONE-TIME PREVIOUS BALANCE LOCK)
 // ════════════════════════════════════════════════════════════
 
 async function loadSettings() {
@@ -644,18 +575,59 @@ async function loadSettings() {
 }
 
 function renderBankSettings(settings) {
+    const isLocked = settings.previous_balance_locked === 'true';
+    
     const container = document.getElementById('banks-settings');
-    container.innerHTML = userBanks.map(bank => `
-        <div class="bank-settings-group">
+    container.innerHTML = '';
+    
+    // Warning banner if not locked
+    if (!isLocked) {
+        const warningBanner = document.createElement('div');
+        warningBanner.style.cssText = 'background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;';
+        warningBanner.innerHTML = `
+            <div style="display: flex; gap: 1rem; align-items: start;">
+                <div style="font-size: 2rem;">⚠️</div>
+                <div>
+                    <strong style="color: #92400e; display: block; margin-bottom: 0.5rem; font-size: 1.1rem;">First Time Setup</strong>
+                    <p style="color: #78350f; margin: 0; line-height: 1.6;">
+                        Enter your <strong>current bank balances</strong> in the "Previous Balance" fields below. 
+                        After you save, these fields will be <strong>locked</strong> and automatically updated during monthly rollovers.
+                        This is a <strong>one-time setup</strong>.
+                    </p>
+                </div>
+            </div>
+        `;
+        container.appendChild(warningBanner);
+    }
+    
+    // Bank settings
+    userBanks.forEach(bank => {
+        const bankGroup = document.createElement('div');
+        bankGroup.className = 'bank-settings-group';
+        bankGroup.innerHTML = `
             <h3 style="color: ${bank.color}; margin-bottom: 1rem;">
                 🏦 ${bank.name}
                 <button class="btn btn-danger" onclick="deleteBank('${bank.code}')" style="float: right; font-size: 0.8rem; padding: 0.4rem 0.8rem;">Delete</button>
             </h3>
             
             <div class="form-group">
-                <label for="previous-${bank.code}">📅 Previous Balance (Last Month's Net)</label>
-                <input type="number" id="previous-${bank.code}" step="0.01" value="${settings[`previous_balance_${bank.code}`] || 0}" readonly disabled style="background: #f1f5f9; cursor: not-allowed; color: #64748b;">
-                <small style="color: #64748b;">Auto-updated on rollover - Do not edit</small>
+                <label for="previous-${bank.code}">
+                    📅 Previous Balance (Last Month's Net)
+                    ${isLocked ? '<span style="color: #16a34a; font-size: 0.85rem;">🔒 Locked</span>' : '<span style="color: #f59e0b; font-size: 0.85rem;">⚠️ First Time Setup</span>'}
+                </label>
+                <input 
+                    type="number" 
+                    id="previous-${bank.code}" 
+                    step="0.01" 
+                    value="${settings[`previous_balance_${bank.code}`] || 0}" 
+                    ${isLocked ? 'readonly disabled' : 'required'}
+                    style="${isLocked ? 'background: #f1f5f9; cursor: not-allowed; color: #64748b;' : 'background: #fef3c7; border: 2px solid #f59e0b;'}"
+                >
+                <small style="color: ${isLocked ? '#64748b' : '#f59e0b'};">
+                    ${isLocked 
+                        ? '🔒 Auto-updated by rollover - Cannot be edited' 
+                        : '⚠️ Enter your starting balance for this month. After saving, this will be locked and auto-updated.'}
+                </small>
             </div>
             
             <div class="form-group">
@@ -675,28 +647,63 @@ function renderBankSettings(settings) {
                     (${formatCurrency(settings[`previous_balance_${bank.code}`] || 0)} + ${formatCurrency(settings[`monthly_input_${bank.code}`] || 0)})
                 </small>
             </div>
-        </div>
-    `).join('');
+        `;
+        container.appendChild(bankGroup);
+    });
 }
 
 async function handleSaveSettings(e) {
     e.preventDefault();
+    
+    const settingsResponse = await apiCall('getSettings');
+    const isLocked = settingsResponse.success && settingsResponse.data.previous_balance_locked === 'true';
+    
+    if (!isLocked) {
+        const confirmMsg = '⚠️ IMPORTANT: First Time Setup\n\n' +
+            'You are about to set your starting balances.\n\n' +
+            '✅ After saving, "Previous Balance" fields will be LOCKED\n' +
+            '✅ They will only be updated automatically during rollover\n' +
+            '✅ You cannot manually edit them again\n\n' +
+            'Make sure your balances are correct!\n\n' +
+            'Continue?';
+        
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+    }
+    
     showLoading();
     
     try {
-        const params = { salary_amount: document.getElementById('salary-input').value };
+        const params = { 
+            salary_amount: document.getElementById('salary-input').value,
+            lock_previous_balance: !isLocked ? 'true' : 'false'
+        };
         
         userBanks.forEach(bank => {
-            const input = document.getElementById(`input-${bank.code}`);
-            if (input) params[`monthly_input_${bank.code}`] = input.value;
+            const inputField = document.getElementById(`input-${bank.code}`);
+            if (inputField) params[`monthly_input_${bank.code}`] = inputField.value;
+            
+            if (!isLocked) {
+                const prevField = document.getElementById(`previous-${bank.code}`);
+                if (prevField) params[`previous_balance_${bank.code}`] = prevField.value;
+            }
         });
         
         const r = await apiCall('updateSettings', params);
         hideLoading();
         
         if (r.success) {
-            showToast('✅ Settings saved!', 'success');
-            setTimeout(() => loadDashboard(), 500);
+            if (!isLocked && r.locked) {
+                showToast('✅ Settings saved!\n🔒 Previous Balance fields are now LOCKED', 'success');
+            } else {
+                showToast('✅ Settings saved!', 'success');
+            }
+            
+            setTimeout(() => {
+                loadSettings();
+                loadDashboard();
+            }, 1000);
         } else {
             showToast('❌ ' + r.error, 'error');
         }
@@ -797,25 +804,10 @@ window.deleteTransaction = deleteTransaction;
 window.deleteBank = deleteBank;
 window.handleCredentialResponse = handleCredentialResponse;
 window.handleSignOut = handleSignOut;
-window.handleSetupSubmit = handleSetupSubmit;
-window.copyAppEmail = copyAppEmail;
+window.handleCreateSpreadsheet = handleCreateSpreadsheet;
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('authYear').textContent = new Date().getFullYear();
-    
-    console.log('%c💰 Balance Sheet Manager - Option 2', 'color: #2563eb; font-size: 18px; font-weight: bold;');
-    console.log('%c✅ User Creates Their Own Spreadsheet', 'color: #16a34a; font-weight: bold;');
-    
-    // Load app email for setup screen
-    try {
-        const r = await fetch(API_BASE_URL + '?action=ping&_t=' + Date.now());
-        const data = await r.json();
-        if (data.appEmail) {
-            document.getElementById('app-email').textContent = data.appEmail;
-            console.log('%c📧 App Email:', 'color: #2563eb; font-weight: bold;', data.appEmail);
-        }
-    } catch (e) {
-        console.log('Could not load app email:', e);
-        document.getElementById('app-email').textContent = 'Unable to load email';
-    }
+    console.log('%c💰 Balance Sheet Manager - Auto-Create', 'color: #2563eb; font-size: 18px; font-weight: bold;');
+    console.log('%c✅ One-Click Setup + Locked Previous Balance', 'color: #16a34a; font-weight: bold;');
 });
