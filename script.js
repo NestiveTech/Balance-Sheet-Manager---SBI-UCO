@@ -1,15 +1,18 @@
 /**
- * Personal Balance Sheet Manager - Frontend (WORKING)
+ * Personal Balance Sheet Manager - Frontend
+ * ⚠️ IMPORTANT: Update API_BASE_URL with your /exec URL
  */
 
-// ⚠️ REPLACE WITH YOUR /exec URL ⚠️
+// ⚠️⚠️⚠️ REPLACE THIS WITH YOUR /exec URL ⚠️⚠️⚠️
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxHOYtvKHeb5z0bJm7w84bal-169HYBgjrkrSSeUFrkA5c3UF7-pTql8tXj2h_KL54wlg/exec';
 
 let transactions = [];
 let dashboardData = {};
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 App starting...');
+    console.log('🚀 Personal Balance Sheet Manager Starting...');
+    console.log('API URL:', API_BASE_URL);
+    
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     document.getElementById('new-date').valueAsDate = new Date();
     
@@ -21,12 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function apiCall(action, params = {}) {
     return new Promise((resolve, reject) => {
-        const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         const script = document.createElement('script');
         
         const timeout = setTimeout(() => {
             cleanup();
-            reject(new Error('Timeout'));
+            reject(new Error('Request timeout (30s)'));
         }, 30000);
         
         window[callbackName] = (data) => {
@@ -38,21 +41,25 @@ function apiCall(action, params = {}) {
         
         function cleanup() {
             delete window[callbackName];
-            if (script.parentNode) script.parentNode.removeChild(script);
+            if (script.parentNode) {
+                script.parentNode.removeChild(script);
+            }
         }
         
-        const urlParams = new URLSearchParams({
-            action: action,
-            callback: callbackName,
-            _t: Date.now(),
-            ...params
+        const url = new URL(API_BASE_URL);
+        url.searchParams.set('action', action);
+        url.searchParams.set('callback', callbackName);
+        url.searchParams.set('_t', Date.now());
+        
+        Object.keys(params).forEach(key => {
+            url.searchParams.set(key, params[key]);
         });
         
-        script.src = `${API_BASE_URL}?${urlParams.toString()}`;
+        script.src = url.toString();
         script.onerror = () => {
             clearTimeout(timeout);
             cleanup();
-            reject(new Error('Script error'));
+            reject(new Error('Script load error - Check your API_BASE_URL'));
         };
         
         console.log(`📤 Request: ${action}`, params);
@@ -100,10 +107,13 @@ async function loadDashboard() {
             document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_gross);
             document.getElementById('combined-net-value').textContent = formatCurrency(dashboardData.combined_net);
             document.getElementById('last-updated').textContent = formatDateTime(dashboardData.last_updated);
+        } else {
+            showToast('❌ Failed to load dashboard', 'error');
         }
     } catch (error) {
         hideLoading();
-        showToast('❌ Dashboard error: ' + error.message, 'error');
+        showToast('❌ Error: ' + error.message, 'error');
+        console.error('Dashboard error:', error);
     }
 }
 
@@ -117,21 +127,28 @@ async function loadTransactions() {
             transactions = result.data;
             renderTransactions();
             updateSummary();
+            console.log(`📊 Loaded ${transactions.length} transactions`);
+        } else {
+            showToast('❌ Failed to load transactions', 'error');
         }
     } catch (error) {
         hideLoading();
-        showToast('❌ Transactions error: ' + error.message, 'error');
+        showToast('❌ Error: ' + error.message, 'error');
+        console.error('Transactions error:', error);
     }
 }
 
 function renderTransactions() {
     const tbody = document.getElementById('transactions-tbody');
+    
     if (transactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;">No transactions yet. Add one above! 👆</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#64748b;">No transactions yet. Add your first transaction above! 👆</td></tr>';
         return;
     }
     
-    tbody.innerHTML = transactions.sort((a,b) => new Date(b.date) - new Date(a.date)).map((tx, i) => `
+    tbody.innerHTML = transactions
+        .sort((a,b) => new Date(b.date) - new Date(a.date))
+        .map((tx, i) => `
         <tr>
             <td>${i+1}</td>
             <td>${tx.date}</td>
@@ -150,6 +167,7 @@ function updateSummary() {
     const total = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
     const sbi = transactions.filter(tx => tx.bank === 'sbi').reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
     const uco = transactions.filter(tx => tx.bank === 'uco').reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+    
     document.getElementById('total-expenses').textContent = formatCurrency(total);
     document.getElementById('sbi-expenses').textContent = formatCurrency(sbi);
     document.getElementById('uco-expenses').textContent = formatCurrency(uco);
@@ -167,19 +185,19 @@ async function handleAddTransaction(e) {
     
     console.log('📝 Adding transaction:', tx);
     
-    if (!tx.date) { showToast('❌ Date required', 'error'); return; }
-    if (isNaN(tx.amount) || tx.amount <= 0) { showToast('❌ Invalid amount', 'error'); return; }
-    if (!tx.bank) { showToast('❌ Select bank', 'error'); return; }
+    if (!tx.date) { showToast('❌ Date is required', 'error'); return; }
+    if (isNaN(tx.amount) || tx.amount <= 0) { showToast('❌ Amount must be positive', 'error'); return; }
+    if (!tx.bank) { showToast('❌ Please select a bank', 'error'); return; }
     
     showLoading();
     try {
         const result = await apiCall('addTransaction', tx);
         hideLoading();
         
-        console.log('Response:', result);
+        console.log('Add transaction result:', result);
         
         if (result.success) {
-            showToast('✅ Transaction added! ID: ' + result.id, 'success');
+            showToast(`✅ Transaction added! ID: ${result.id}`, 'success');
             document.getElementById('quick-add-form').reset();
             document.getElementById('new-date').valueAsDate = new Date();
             
@@ -188,17 +206,19 @@ async function handleAddTransaction(e) {
                 loadDashboard();
             }, 500);
         } else {
-            showToast('❌ Failed: ' + result.error, 'error');
+            showToast('❌ Failed: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (error) {
         hideLoading();
         showToast('❌ Error: ' + error.message, 'error');
+        console.error('Add transaction error:', error);
     }
 }
 
 function editTransaction(id) {
     const tx = transactions.find(t => t.id === id);
     if (!tx) return;
+    
     document.getElementById('edit-id').value = tx.id;
     document.getElementById('edit-date').value = tx.date;
     document.getElementById('edit-description').value = tx.description;
@@ -225,7 +245,7 @@ async function handleEditTransaction(e) {
         hideLoading();
         
         if (result.success) {
-            showToast('✅ Updated!', 'success');
+            showToast('✅ Transaction updated!', 'success');
             closeEditModal();
             setTimeout(() => {
                 loadTransactions();
@@ -241,7 +261,7 @@ async function handleEditTransaction(e) {
 }
 
 async function deleteTransaction(id) {
-    if (!confirm('Delete this transaction?')) return;
+    if (!confirm('🗑️ Are you sure you want to delete this transaction?')) return;
     
     showLoading();
     try {
@@ -249,7 +269,7 @@ async function deleteTransaction(id) {
         hideLoading();
         
         if (result.success) {
-            showToast('✅ Deleted!', 'success');
+            showToast('✅ Transaction deleted!', 'success');
             setTimeout(() => {
                 loadTransactions();
                 loadDashboard();
@@ -295,7 +315,7 @@ async function handleSaveSettings(e) {
         hideLoading();
         
         if (result.success) {
-            showToast('✅ Settings saved!', 'success');
+            showToast('✅ Settings saved successfully!', 'success');
             setTimeout(() => loadDashboard(), 500);
         } else {
             showToast('❌ ' + result.error, 'error');
@@ -307,8 +327,9 @@ async function handleSaveSettings(e) {
 }
 
 async function handleRecalculate() {
+    showToast('🔄 Recalculating...', 'info');
     await Promise.all([loadDashboard(), loadTransactions()]);
-    showToast('✅ Recalculated!', 'success');
+    showToast('✅ Recalculation complete!', 'success');
 }
 
 async function handleExport() {
@@ -318,18 +339,22 @@ async function handleExport() {
         hideLoading();
         
         if (result.success && result.data) {
-            const blob = new Blob([result.data], { type: 'text/csv' });
+            const blob = new Blob([result.data], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `balance_sheet_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showToast('✅ Exported!', 'success');
+            showToast('✅ Exported successfully!', 'success');
+        } else {
+            showToast('❌ Export failed', 'error');
         }
     } catch (error) {
         hideLoading();
-        showToast('❌ Export failed', 'error');
+        showToast('❌ Error: ' + error.message, 'error');
     }
 }
 
@@ -340,7 +365,13 @@ function formatCurrency(val) {
 function formatDateTime(iso) {
     if (!iso) return 'Never';
     try {
-        return new Date(iso).toLocaleString('en-IN', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        return new Date(iso).toLocaleString('en-IN', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     } catch(e) {
         return iso;
     }
@@ -352,8 +383,13 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function showLoading() { document.getElementById('loading-overlay').classList.add('active'); }
-function hideLoading() { document.getElementById('loading-overlay').classList.remove('active'); }
+function showLoading() {
+    document.getElementById('loading-overlay').classList.add('active');
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').classList.remove('active');
+}
 
 function showToast(msg, type='info') {
     const toast = document.getElementById('toast');
@@ -365,4 +401,5 @@ function showToast(msg, type='info') {
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;
 
-console.log('✅ App loaded!');
+console.log('✅ Personal Balance Sheet Manager loaded successfully!');
+console.log('📌 Make sure you updated API_BASE_URL in this file!');

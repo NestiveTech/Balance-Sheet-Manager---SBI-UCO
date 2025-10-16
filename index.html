@@ -32,46 +32,36 @@
                     <div class="tile-label">💰 Salary</div>
                     <div class="tile-value" id="salary-value">₹0.00</div>
                 </div>
-
                 <div class="tile tile-sbi">
                     <div class="tile-label">🏦 SBI Bank Gross</div>
                     <div class="tile-value" id="sbi-gross-value">₹0.00</div>
                 </div>
-
                 <div class="tile tile-sbi">
                     <div class="tile-label">💵 SBI Net Balance</div>
                     <div class="tile-value" id="sbi-net-value">₹0.00</div>
                 </div>
-
                 <div class="tile tile-uco">
                     <div class="tile-label">🏦 UCO Bank Gross</div>
                     <div class="tile-value" id="uco-gross-value">₹0.00</div>
                 </div>
-
                 <div class="tile tile-uco">
                     <div class="tile-label">💵 UCO Net Balance</div>
                     <div class="tile-value" id="uco-net-value">₹0.00</div>
                 </div>
-
                 <div class="tile tile-combined">
                     <div class="tile-label">📈 Combined Gross</div>
                     <div class="tile-value" id="combined-gross-value">₹0.00</div>
                 </div>
-
                 <div class="tile tile-combined">
                     <div class="tile-label">💎 Combined Net</div>
                     <div class="tile-value" id="combined-net-value">₹0.00</div>
                 </div>
             </div>
-
-            <div class="timestamp">
-                ⏰ Last Updated: <span id="last-updated">Never</span>
-            </div>
+            <div class="timestamp">⏰ Last Updated: <span id="last-updated">Never</span></div>
         </div>
 
         <!-- Transactions Page -->
         <div id="transactions-page" class="page">
-            <!-- Quick Add Form -->
             <div class="card">
                 <h2>➕ Add New Transaction</h2>
                 <form id="quick-add-form" class="quick-add-form">
@@ -87,7 +77,6 @@
                 </form>
             </div>
 
-            <!-- Summary Strip -->
             <div class="summary-strip">
                 <div class="summary-item">
                     <span class="summary-label">Total Expenses:</span>
@@ -103,7 +92,6 @@
                 </div>
             </div>
 
-            <!-- Transactions Table -->
             <div class="table-container">
                 <table class="transactions-table">
                     <thead>
@@ -117,11 +105,7 @@
                         </tr>
                     </thead>
                     <tbody id="transactions-tbody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--color-text-light);">
-                                Loading transactions...
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -136,17 +120,14 @@
                         <label for="salary-input">💰 Salary Amount</label>
                         <input type="number" id="salary-input" step="0.01" min="0" required>
                     </div>
-
                     <div class="form-group">
                         <label for="sbi-opening-input">🏦 SBI Opening Balance</label>
                         <input type="number" id="sbi-opening-input" step="0.01" min="0" required>
                     </div>
-
                     <div class="form-group">
                         <label for="uco-opening-input">🏦 UCO Opening Balance</label>
                         <input type="number" id="uco-opening-input" step="0.01" min="0" required>
                     </div>
-
                     <div class="button-group">
                         <button type="submit" class="btn btn-primary">💾 Save Settings</button>
                         <button type="button" class="btn btn-secondary" id="recalculate-btn">🔄 Recalculate</button>
@@ -157,25 +138,19 @@
             <div class="card">
                 <h2>📤 Data Management</h2>
                 <div class="button-group">
-                    <button class="btn btn-secondary" id="import-btn">📥 Import from CSV</button>
                     <button class="btn btn-secondary" id="export-btn">📤 Export to CSV</button>
                 </div>
-                <input type="file" id="import-file" accept=".csv" style="display: none;">
-                <p class="help-text">Import format: Date, Description, Amount, Bank (sbi/uco)</p>
             </div>
         </div>
     </main>
 
-    <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="spinner"></div>
         <p>Processing...</p>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <!-- Edit Modal -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h2>✏️ Edit Transaction</h2>
@@ -201,7 +176,7 @@
                     </select>
                 </div>
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                    <button type="submit" class="btn btn-primary">💾 Save</button>
                     <button type="button" class="btn btn-secondary" id="cancel-edit-btn">❌ Cancel</button>
                 </div>
             </form>
