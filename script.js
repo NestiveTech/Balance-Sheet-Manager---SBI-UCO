@@ -1,4 +1,5 @@
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
+// const API_BASE_URL = 'YOUR_DEPLOYMENT_URL_HERE';
 
 let transactions = [];
 let dashboardData = {};
@@ -37,6 +38,7 @@ function setupListeners() {
     document.getElementById('edit-form').addEventListener('submit', handleEditTransaction);
     document.getElementById('cancel-edit-btn').addEventListener('click', () => document.getElementById('edit-modal').classList.remove('active'));
     document.getElementById('recalculate-btn').addEventListener('click', () => { loadDashboard(); loadTransactions(); showToast('✅ Recalculated', 'success'); });
+    document.getElementById('rollover-btn').addEventListener('click', handleRollover);
     document.getElementById('export-btn').addEventListener('click', handleExport);
 }
 
@@ -58,14 +60,14 @@ async function loadDashboard() {
         if (r.success && r.data) {
             dashboardData = r.data;
             document.getElementById('salary-value').textContent = formatCurrency(dashboardData.salary);
-            document.getElementById('sbi-gross-value').textContent = formatCurrency(dashboardData.gross_sbi);
-            document.getElementById('sbi-present-value').textContent = formatCurrency(dashboardData.present_sbi);
-            document.getElementById('sbi-net-value').textContent = formatCurrency(dashboardData.net_sbi);
-            document.getElementById('uco-gross-value').textContent = formatCurrency(dashboardData.gross_uco);
-            document.getElementById('uco-present-value').textContent = formatCurrency(dashboardData.present_uco);
-            document.getElementById('uco-net-value').textContent = formatCurrency(dashboardData.net_uco);
-            document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_gross);
-            document.getElementById('combined-present-value').textContent = formatCurrency(dashboardData.combined_present);
+            document.getElementById('sbi-gross-value').textContent = formatCurrency(dashboardData.total_balance_sbi);
+            document.getElementById('sbi-present-value').textContent = formatCurrency(dashboardData.opening_balance_sbi);
+            document.getElementById('sbi-net-value').textContent = formatCurrency(dashboardData.net_balance_sbi);
+            document.getElementById('uco-gross-value').textContent = formatCurrency(dashboardData.total_balance_uco);
+            document.getElementById('uco-present-value').textContent = formatCurrency(dashboardData.opening_balance_uco);
+            document.getElementById('uco-net-value').textContent = formatCurrency(dashboardData.net_balance_uco);
+            document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_total);
+            document.getElementById('combined-present-value').textContent = formatCurrency(dashboardData.combined_opening);
             document.getElementById('combined-net-value').textContent = formatCurrency(dashboardData.combined_net);
             document.getElementById('last-updated').textContent = formatDateTime(dashboardData.last_updated);
         }
@@ -130,7 +132,7 @@ async function handleAddTransaction(e) {
         bank: document.getElementById('new-bank').value
     };
     if (!tx.date || isNaN(tx.amount) || tx.amount <= 0 || !tx.bank) {
-        showToast('❌ Fill all fields correctly', 'error');
+        showToast('❌ Fill all fields', 'error');
         return;
     }
     showLoading();
@@ -209,9 +211,9 @@ async function loadSettings() {
         if (r.success && r.data) {
             document.getElementById('salary-input').value = r.data.salary_amount || 0;
             document.getElementById('sbi-opening-input').value = r.data.opening_balance_sbi || 0;
-            document.getElementById('sbi-present-input').value = r.data.present_balance_sbi || 0;
+            document.getElementById('sbi-previous-input').value = r.data.previous_balance_sbi || 0;
             document.getElementById('uco-opening-input').value = r.data.opening_balance_uco || 0;
-            document.getElementById('uco-present-input').value = r.data.present_balance_uco || 0;
+            document.getElementById('uco-previous-input').value = r.data.previous_balance_uco || 0;
         }
     } catch (e) {}
 }
@@ -223,14 +225,32 @@ async function handleSaveSettings(e) {
         const r = await apiCall('updateSettings', {
             salary_amount: document.getElementById('salary-input').value,
             opening_balance_sbi: document.getElementById('sbi-opening-input').value,
-            present_balance_sbi: document.getElementById('sbi-present-input').value,
+            previous_balance_sbi: document.getElementById('sbi-previous-input').value,
             opening_balance_uco: document.getElementById('uco-opening-input').value,
-            present_balance_uco: document.getElementById('uco-present-input').value
+            previous_balance_uco: document.getElementById('uco-previous-input').value
         });
         hideLoading();
         if (r.success) {
             showToast('✅ Settings saved!', 'success');
             setTimeout(() => loadDashboard(), 500);
+        }
+    } catch (e) {
+        hideLoading();
+        showToast('❌ ' + e.message, 'error');
+    }
+}
+
+async function handleRollover() {
+    if (!confirm('📅 Rollover to next month?\n\nThis sets current Net Balances as next month\'s Previous Balances.')) return;
+    showLoading();
+    try {
+        const r = await apiCall('rolloverMonth');
+        hideLoading();
+        if (r.success) {
+            showToast(`✅ Rolled over!\nSBI: ₹${r.new_previous_sbi.toFixed(2)}\nUCO: ₹${r.new_previous_uco.toFixed(2)}`, 'success');
+            setTimeout(() => { loadSettings(); loadDashboard(); }, 1000);
+        } else {
+            showToast('❌ ' + r.error, 'error');
         }
     } catch (e) {
         hideLoading();
