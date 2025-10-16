@@ -241,7 +241,7 @@ async function handleSaveSettings(e) {
 }
 
 async function handleRollover() {
-    if (!confirm('📅 Rollover to next month?\n\nThis sets current Net Balances as next month\'s Previous Balances.')) return;
+    if (!confirm('📅 Rollover to next month?\n\nThis sets current Net → next Previous')) return;
     showLoading();
     try {
         const r = await apiCall('rolloverMonth');
@@ -249,8 +249,6 @@ async function handleRollover() {
         if (r.success) {
             showToast(`✅ Rolled over!\nSBI: ₹${r.new_previous_sbi.toFixed(2)}\nUCO: ₹${r.new_previous_uco.toFixed(2)}`, 'success');
             setTimeout(() => { loadSettings(); loadDashboard(); }, 1000);
-        } else {
-            showToast('❌ ' + r.error, 'error');
         }
     } catch (e) {
         hideLoading();
