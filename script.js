@@ -1,17 +1,91 @@
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
-// const API_BASE_URL = 'YOUR_DEPLOYMENT_URL_HERE';
 
 let transactions = [];
 let dashboardData = {};
+let currentUser = null;
+let accessToken = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-    document.getElementById('new-date').valueAsDate = new Date();
-    setupListeners();
-    loadDashboard();
-    loadTransactions();
-    loadSettings();
-});
+// ════════════════════════════════════════════════════════════
+// GOOGLE SIGN-IN
+// ════════════════════════════════════════════════════════════
+
+function handleCredentialResponse(response) {
+    const credential = response.credential;
+    const payload = parseJwt(credential);
+    
+    currentUser = {
+        email: payload.email,
+        name: payload.name,
+        picture: payload.picture
+    };
+    
+    accessToken = credential;
+    
+    showLoading();
+    initializeUser();
+}
+
+function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+}
+
+async function initializeUser() {
+    try {
+        const r = await apiCall('initUser', { accessToken });
+        hideLoading();
+        
+        if (r.success) {
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('user-email').textContent = currentUser.email;
+            document.getElementById('user-avatar').src = currentUser.picture;
+            
+            if (r.sheetUrl) {
+                document.getElementById('sheet-link').href = r.sheetUrl;
+                document.getElementById('sheet-link').style.display = 'inline-flex';
+            }
+            
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            document.getElementById('new-date').valueAsDate = new Date();
+            
+            setupListeners();
+            loadDashboard();
+            loadTransactions();
+            loadSettings();
+            
+            if (r.newUser) {
+                showToast('✅ Welcome! Your personal spreadsheet has been created in your Google Drive!', 'success');
+            } else {
+                showToast('✅ Welcome back!', 'success');
+            }
+        } else {
+            showToast('❌ ' + r.error, 'error');
+        }
+    } catch (e) {
+        hideLoading();
+        showToast('❌ ' + e.message, 'error');
+    }
+}
+
+function handleSignOut() {
+    google.accounts.id.disableAutoSelect();
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+    currentUser = null;
+    accessToken = null;
+    showToast('👋 Signed out successfully', 'success');
+}
+
+// ════════════════════════════════════════════════════════════
+// API CALLS
+// ════════════════════════════════════════════════════════════
 
 function apiCall(action, params = {}) {
     return new Promise((resolve, reject) => {
@@ -24,12 +98,19 @@ function apiCall(action, params = {}) {
         url.searchParams.set('action', action);
         url.searchParams.set('callback', cb);
         url.searchParams.set('_t', Date.now());
-        Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+        if (accessToken) url.searchParams.set('accessToken', accessToken);
+        Object.keys(params).forEach(k => {
+            if (k !== 'accessToken') url.searchParams.set(k, params[k]);
+        });
         script.src = url.toString();
         script.onerror = () => { clearTimeout(timeout); cleanup(); reject(new Error('Script load error')); };
         document.head.appendChild(script);
     });
 }
+
+// ════════════════════════════════════════════════════════════
+// SETUP
+// ════════════════════════════════════════════════════════════
 
 function setupListeners() {
     document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => switchPage(b.dataset.page)));
@@ -52,6 +133,10 @@ function switchPage(p) {
     else if (p === 'settings') loadSettings();
 }
 
+// ════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════
+
 async function loadDashboard() {
     showLoading();
     try {
@@ -60,25 +145,26 @@ async function loadDashboard() {
         if (r.success && r.data) {
             dashboardData = r.data;
             
-            document.getElementById('salary-value').textContent = formatCurrency(dashboardData.salary);
+            if (r.data.sheetUrl) {
+                document.getElementById('sheet-link').href = r.data.sheetUrl;
+                document.getElementById('sheet-link').style.display = 'inline-flex';
+            }
             
+            document.getElementById('salary-value').textContent = formatCurrency(dashboardData.salary);
             document.getElementById('sbi-present-value').textContent = formatCurrency(dashboardData.opening_balance_sbi);
             document.getElementById('sbi-previous-value').textContent = formatCurrency(dashboardData.previous_balance_sbi);
             document.getElementById('sbi-gross-value').textContent = formatCurrency(dashboardData.total_balance_sbi);
             document.getElementById('sbi-expenses-dash').textContent = formatCurrency(dashboardData.expenses_sbi);
             document.getElementById('sbi-net-value').textContent = formatCurrency(dashboardData.net_balance_sbi);
-            
             document.getElementById('uco-present-value').textContent = formatCurrency(dashboardData.opening_balance_uco);
             document.getElementById('uco-previous-value').textContent = formatCurrency(dashboardData.previous_balance_uco);
             document.getElementById('uco-gross-value').textContent = formatCurrency(dashboardData.total_balance_uco);
             document.getElementById('uco-expenses-dash').textContent = formatCurrency(dashboardData.expenses_uco);
             document.getElementById('uco-net-value').textContent = formatCurrency(dashboardData.net_balance_uco);
-            
             document.getElementById('combined-present-value').textContent = formatCurrency(dashboardData.combined_opening);
             document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_total);
             document.getElementById('combined-expenses-dash').textContent = formatCurrency(dashboardData.combined_expenses);
             document.getElementById('combined-net-value').textContent = formatCurrency(dashboardData.combined_net);
-            
             document.getElementById('last-updated').textContent = formatDateTime(dashboardData.last_updated);
         }
     } catch (e) {
@@ -86,6 +172,10 @@ async function loadDashboard() {
         showToast('❌ ' + e.message, 'error');
     }
 }
+
+// ════════════════════════════════════════════════════════════
+// TRANSACTIONS
+// ════════════════════════════════════════════════════════════
 
 async function loadTransactions() {
     showLoading();
@@ -215,6 +305,10 @@ async function deleteTransaction(id) {
     }
 }
 
+// ════════════════════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════════════════════
+
 async function loadSettings() {
     try {
         const r = await apiCall('getSettings');
@@ -251,7 +345,7 @@ async function handleSaveSettings(e) {
 }
 
 async function handleRollover() {
-    if (!confirm('📅 Rollover to next month?\n\nNet → Previous')) return;
+    if (!confirm('📅 Rollover to next month?')) return;
     showLoading();
     try {
         const r = await apiCall('rolloverMonth');
@@ -286,6 +380,10 @@ async function handleExport() {
     }
 }
 
+// ════════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════════
+
 function formatCurrency(v) { return `₹${parseFloat(v||0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}`; }
 function formatDateTime(iso) { try { return new Date(iso).toLocaleString('en-IN'); } catch(e) { return iso; } }
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
@@ -295,3 +393,4 @@ function showToast(m, t='info') { const toast = document.getElementById('toast')
 
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;
+window.handleCredentialResponse = handleCredentialResponse;
