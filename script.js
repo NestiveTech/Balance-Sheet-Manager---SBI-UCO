@@ -59,16 +59,26 @@ async function loadDashboard() {
         hideLoading();
         if (r.success && r.data) {
             dashboardData = r.data;
+            
             document.getElementById('salary-value').textContent = formatCurrency(dashboardData.salary);
-            document.getElementById('sbi-gross-value').textContent = formatCurrency(dashboardData.total_balance_sbi);
+            
             document.getElementById('sbi-present-value').textContent = formatCurrency(dashboardData.opening_balance_sbi);
+            document.getElementById('sbi-previous-value').textContent = formatCurrency(dashboardData.previous_balance_sbi);
+            document.getElementById('sbi-gross-value').textContent = formatCurrency(dashboardData.total_balance_sbi);
+            document.getElementById('sbi-expenses-dash').textContent = formatCurrency(dashboardData.expenses_sbi);
             document.getElementById('sbi-net-value').textContent = formatCurrency(dashboardData.net_balance_sbi);
-            document.getElementById('uco-gross-value').textContent = formatCurrency(dashboardData.total_balance_uco);
+            
             document.getElementById('uco-present-value').textContent = formatCurrency(dashboardData.opening_balance_uco);
+            document.getElementById('uco-previous-value').textContent = formatCurrency(dashboardData.previous_balance_uco);
+            document.getElementById('uco-gross-value').textContent = formatCurrency(dashboardData.total_balance_uco);
+            document.getElementById('uco-expenses-dash').textContent = formatCurrency(dashboardData.expenses_uco);
             document.getElementById('uco-net-value').textContent = formatCurrency(dashboardData.net_balance_uco);
-            document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_total);
+            
             document.getElementById('combined-present-value').textContent = formatCurrency(dashboardData.combined_opening);
+            document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_total);
+            document.getElementById('combined-expenses-dash').textContent = formatCurrency(dashboardData.combined_expenses);
             document.getElementById('combined-net-value').textContent = formatCurrency(dashboardData.combined_net);
+            
             document.getElementById('last-updated').textContent = formatDateTime(dashboardData.last_updated);
         }
     } catch (e) {
@@ -241,7 +251,7 @@ async function handleSaveSettings(e) {
 }
 
 async function handleRollover() {
-    if (!confirm('📅 Rollover to next month?\n\nThis sets current Net → next Previous')) return;
+    if (!confirm('📅 Rollover to next month?\n\nNet → Previous')) return;
     showLoading();
     try {
         const r = await apiCall('rolloverMonth');
