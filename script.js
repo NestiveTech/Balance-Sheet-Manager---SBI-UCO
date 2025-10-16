@@ -6,6 +6,7 @@
 // REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
 
+
 let transactions = [];
 let dashboardData = {};
 let currentUser = null;
