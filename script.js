@@ -29,12 +29,14 @@ function handleCredentialResponse(response) {
     document.getElementById('user-email').textContent = currentUser.email;
     document.getElementById('user-avatar').src = currentUser.picture;
     
+    // Hide auth screen, show app screen
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
     
     showLoading();
-    checkUserSetup();
+    checkUserSetup();  // ✅ CORRECT - Checks if user has spreadsheet
 }
+
 
 function parseJwt(token) {
     const base64Url = token.split('.')[1];
@@ -61,6 +63,8 @@ async function checkUserSetup() {
         const r = await apiCall('checkUser');
         hideLoading();
         
+        console.log('✅ Check result:', r);
+        
         if (r.success) {
             if (r.hasSpreadsheet) {
                 // User already has spreadsheet
@@ -76,17 +80,20 @@ async function checkUserSetup() {
                 showToast('✅ Welcome back!', 'success');
             } else {
                 // Show setup screen
-                showSetupScreen();
+                console.log('📋 Showing setup screen');
+                document.getElementById('setup-screen').style.display = 'flex';
+                document.getElementById('main-app').style.display = 'none';
             }
         } else {
             showToast('❌ ' + r.error, 'error');
         }
     } catch (e) {
         hideLoading();
-        console.error('Check error:', e);
+        console.error('❌ Check error:', e);
         showToast('❌ ' + e.message, 'error');
     }
 }
+
 
 function showSetupScreen() {
     document.getElementById('setup-screen').style.display = 'flex';
