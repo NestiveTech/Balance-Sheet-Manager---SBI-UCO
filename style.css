@@ -1,5 +1,5 @@
 /**
- * BALANCE SHEET MANAGER - COMPLETE STYLES
+ * BALANCE SHEET MANAGER - COMPLETE STYLES WITH CUSTOM BANKS
  */
 
 * {
@@ -146,6 +146,13 @@ body {
     backdrop-filter: blur(10px);
 }
 
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
 .user-details {
     text-align: left;
 }
@@ -253,7 +260,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Dashboard Section Headers */
+/* Section Headers */
 .section-header {
     margin: 2rem 0 1.5rem 0;
     padding: 1.5rem 2rem;
@@ -267,14 +274,12 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
-    position: relative;
 }
 
 .section-header p {
     margin: 0.5rem 0 0 0;
     font-size: 0.95rem;
     opacity: 0.9;
-    position: relative;
 }
 
 .salary-header {
@@ -282,19 +287,14 @@ body {
     color: white;
 }
 
-.sbi-header {
-    background: linear-gradient(135deg, #00529B 0%, #003a6f 100%);
-    color: white;
-}
-
-.uco-header {
-    background: linear-gradient(135deg, #ED7D31 0%, #c86420 100%);
-    color: white;
-}
-
 .combined-header {
     background: linear-gradient(135deg, #7030A0 0%, #552080 100%);
     color: white;
+}
+
+/* Bank Section */
+.bank-section {
+    margin-bottom: 2rem;
 }
 
 /* Dashboard Sections */
@@ -333,16 +333,6 @@ body {
     background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
 }
 
-.tile-sbi {
-    border-color: var(--color-sbi);
-    background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%);
-}
-
-.tile-uco {
-    border-color: var(--color-uco);
-    background: linear-gradient(135deg, #ffffff 0%, #ffedd5 100%);
-}
-
 .tile-combined {
     border-color: var(--color-combined);
     background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%);
@@ -377,10 +367,6 @@ body {
 .tile-highlight {
     border-width: 2px;
 }
-
-.tile-sbi.tile-highlight { border-color: var(--color-sbi); }
-.tile-uco.tile-highlight { border-color: var(--color-uco); }
-.tile-combined.tile-highlight { border-color: var(--color-combined); }
 
 .tile-large .tile-icon {
     font-size: 4rem;
@@ -435,6 +421,10 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.form-group {
+    margin-bottom: 1rem;
+}
+
 .form-group label {
     display: block;
     font-weight: 500;
@@ -446,6 +436,7 @@ input[type="text"],
 input[type="email"],
 input[type="number"],
 input[type="date"],
+input[type="color"],
 select {
     width: 100%;
     padding: 0.75rem;
@@ -456,11 +447,25 @@ select {
     font-family: inherit;
 }
 
+input[type="color"] {
+    height: 50px;
+    cursor: pointer;
+}
+
 input:focus,
 select:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Bank Settings */
+.bank-settings-group {
+    background: var(--color-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--color-primary);
 }
 
 /* Buttons */
@@ -611,16 +616,6 @@ select:focus {
     text-transform: uppercase;
 }
 
-.bank-badge.sbi {
-    background: rgba(0, 82, 155, 0.1);
-    color: var(--color-sbi);
-}
-
-.bank-badge.uco {
-    background: rgba(237, 125, 49, 0.1);
-    color: var(--color-uco);
-}
-
 /* Modal */
 .modal {
     display: none;
@@ -695,6 +690,7 @@ select:focus {
     transition: var(--transition);
     z-index: 10000;
     max-width: 400px;
+    white-space: pre-line;
 }
 
 .toast.active {

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Balance Sheet Manager - Multi-User</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <!-- Auth Screen -->
@@ -12,33 +13,27 @@
         <div class="auth-container">
             <div class="auth-logo">💰</div>
             <h1 class="auth-title">Balance Sheet Manager</h1>
-            <p class="auth-subtitle">SBI / UCO Bank Manager • Multi-User System</p>
-            <p class="auth-description">Each user gets their own Google Spreadsheet</p>
+            <p class="auth-subtitle">Multi-Bank Manager • Multi-User System</p>
+            <p class="auth-description">Add your own banks and manage finances easily</p>
             
-            <!-- Simple Login Form (No OAuth Issues) -->
-            <form onsubmit="handleSimpleLogin(event)" style="margin-top: 2rem;">
-                <div style="margin-bottom: 1rem;">
-                    <input type="text" 
-                           id="login-name" 
-                           placeholder="Your Name" 
-                           required
-                           style="width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <input type="email" 
-                           id="login-email" 
-                           placeholder="Your Email" 
-                           required
-                           style="width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
-                    🚀 Get Started
-                </button>
-            </form>
+            <div id="g_id_onload"
+                 data-client_id="213013984719-bgrl6bil62nmt2b66d03tnq7ms0rage7.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false"
+                 data-itp_support="true">
+            </div>
             
-            <p style="margin-top: 1rem; font-size: 0.875rem; color: #64748b;">
-                Your data is stored securely in Google Sheets
-            </p>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-shape="rectangular"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-size="large"
+                 data-logo_alignment="left"
+                 data-width="350">
+            </div>
         </div>
     </div>
 
@@ -49,10 +44,11 @@
                 <div class="header-content">
                     <div>
                         <h1 class="header-title">BALANCE SHEET — <span id="currentYear"></span></h1>
-                        <p class="header-subtitle">SBI / UCO Bank Manager | Total = Opening + Previous</p>
+                        <p class="header-subtitle">Multi-Bank Manager | Custom Banks Support</p>
                     </div>
                     <div class="user-info-container">
                         <div class="user-info">
+                            <img id="user-avatar" class="user-avatar" src="" alt="User">
                             <div class="user-details">
                                 <div class="user-name" id="user-name">User Name</div>
                                 <div class="user-email" id="user-email">user@example.com</div>
@@ -93,124 +89,41 @@
                     </div>
                 </div>
 
-                <!-- SBI Bank Section -->
-                <div class="section-header sbi-header">
-                    <h2>🏦 SBI BANK</h2>
-                    <p>Formula: Total = Opening + Previous</p>
-                </div>
-                <div class="dashboard-section sbi-section">
-                    <div class="tile tile-sbi">
-                        <div class="tile-icon">🏦</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Opening Balance</div>
-                            <div class="tile-value" id="sbi-present-value">₹0.00</div>
-                        </div>
-                    </div>
-                    <div class="tile tile-sbi">
-                        <div class="tile-icon">📊</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Previous Balance</div>
-                            <div class="tile-value" id="sbi-previous-value">₹0.00</div>
-                        </div>
-                    </div>
-                    <div class="tile tile-sbi tile-highlight">
-                        <div class="tile-icon">💰</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Total Balance</div>
-                            <div class="tile-value" id="sbi-gross-value">₹0.00</div>
-                        </div>
-                    </div>
-                    <div class="tile tile-sbi">
-                        <div class="tile-icon">💸</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Expenses</div>
-                            <div class="tile-value tile-value-danger" id="sbi-expenses-dash">₹0.00</div>
-                        </div>
-                    </div>
-                    <div class="tile tile-sbi tile-highlight">
-                        <div class="tile-icon">✅</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Net Balance</div>
-                            <div class="tile-value tile-value-success" id="sbi-net-value">₹0.00</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- UCO Bank Section -->
-                <div class="section-header uco-header">
-                    <h2>🏦 UCO BANK</h2>
-                    <p>Formula: Total = Opening + Previous</p>
-                </div>
-                <div class="dashboard-section uco-section">
-                    <div class="tile tile-uco">
-                        <div class="tile-icon">🏦</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Opening Balance</div>
-                            <div class="tile-value" id="uco-present-value">₹0.00</div>
-                        </div>
-                    </div>
-                    <div class="tile tile-uco">
-                        <div class="tile-icon">📊</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Previous Balance</div>
-                            <div class="tile-value" id="uco-previous-value">₹0.00</div>
-                        </div>
-                    </div>
-                    <div class="tile tile-uco tile-highlight">
-                        <div class="tile-icon">💰</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Total Balance</div>
-                            <div class="tile-value" id="uco-gross-value">₹0.00</div>
-                        </div>
-                    </div>
-                    <div class="tile tile-uco">
-                        <div class="tile-icon">💸</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Expenses</div>
-                            <div class="tile-value tile-value-danger" id="uco-expenses-dash">₹0.00</div>
-                        </div>
-                    </div>
-                    <div class="tile tile-uco tile-highlight">
-                        <div class="tile-icon">✅</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Net Balance</div>
-                            <div class="tile-value tile-value-success" id="uco-net-value">₹0.00</div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Dynamic Banks Container -->
+                <div id="banks-container"></div>
 
                 <!-- Combined Section -->
                 <div class="section-header combined-header">
                     <h2>📊 COMBINED TOTALS</h2>
-                    <p>SBI + UCO Combined Overview</p>
+                    <p>All Banks Combined Overview</p>
                 </div>
                 <div class="dashboard-section combined-section">
                     <div class="tile tile-combined">
                         <div class="tile-icon">🏦</div>
                         <div class="tile-content">
                             <div class="tile-label">Combined Opening</div>
-                            <div class="tile-value" id="combined-present-value">₹0.00</div>
+                            <div class="tile-value" id="combined-opening">₹0.00</div>
                         </div>
                     </div>
                     <div class="tile tile-combined tile-highlight">
                         <div class="tile-icon">💰</div>
                         <div class="tile-content">
                             <div class="tile-label">Combined Total</div>
-                            <div class="tile-value" id="combined-gross-value">₹0.00</div>
+                            <div class="tile-value" id="combined-total">₹0.00</div>
                         </div>
                     </div>
                     <div class="tile tile-combined">
                         <div class="tile-icon">💸</div>
                         <div class="tile-content">
                             <div class="tile-label">Combined Expenses</div>
-                            <div class="tile-value tile-value-danger" id="combined-expenses-dash">₹0.00</div>
+                            <div class="tile-value tile-value-danger" id="combined-expenses">₹0.00</div>
                         </div>
                     </div>
                     <div class="tile tile-combined tile-highlight">
                         <div class="tile-icon">✅</div>
                         <div class="tile-content">
                             <div class="tile-label">Combined Net</div>
-                            <div class="tile-value tile-value-success" id="combined-net-value">₹0.00</div>
+                            <div class="tile-value tile-value-success" id="combined-net">₹0.00</div>
                         </div>
                     </div>
                 </div>
@@ -228,8 +141,6 @@
                         <input type="number" id="new-amount" placeholder="Amount" step="0.01" min="0.01" required>
                         <select id="new-bank" required>
                             <option value="">Select Bank</option>
-                            <option value="sbi">SBI</option>
-                            <option value="uco">UCO</option>
                         </select>
                         <button type="submit" class="btn btn-primary">Add Transaction</button>
                     </form>
@@ -240,14 +151,7 @@
                         <span class="summary-label">Total Expenses:</span>
                         <span class="summary-value" id="total-expenses">₹0.00</span>
                     </div>
-                    <div class="summary-item">
-                        <span class="summary-label">SBI Expenses:</span>
-                        <span class="summary-value" id="sbi-expenses">₹0.00</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">UCO Expenses:</span>
-                        <span class="summary-value" id="uco-expenses">₹0.00</span>
-                    </div>
+                    <div id="bank-summary"></div>
                 </div>
                 
                 <div class="table-container">
@@ -280,31 +184,14 @@
                             <small style="color: #64748b;">Reference only</small>
                         </div>
 
-                        <h3 style="margin: 2rem 0 1rem 0; color: #00529B;">🏦 SBI Bank</h3>
-                        
-                        <div class="form-group">
-                            <label for="sbi-opening-input">Opening Balance</label>
-                            <input type="number" id="sbi-opening-input" step="0.01" min="0" required>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem 0;">
+                            <h3 style="margin: 0;">🏦 Your Banks</h3>
+                            <button type="button" class="btn btn-primary" id="add-bank-btn">➕ Add Bank</button>
                         </div>
 
-                        <div class="form-group">
-                            <label for="sbi-previous-input">Previous Balance</label>
-                            <input type="number" id="sbi-previous-input" step="0.01" min="0" required>
-                        </div>
+                        <div id="banks-settings"></div>
 
-                        <h3 style="margin: 2rem 0 1rem 0; color: #ED7D31;">🏦 UCO Bank</h3>
-                        
-                        <div class="form-group">
-                            <label for="uco-opening-input">Opening Balance</label>
-                            <input type="number" id="uco-opening-input" step="0.01" min="0" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="uco-previous-input">Previous Balance</label>
-                            <input type="number" id="uco-previous-input" step="0.01" min="0" required>
-                        </div>
-
-                        <div class="button-group">
+                        <div class="button-group" style="margin-top: 2rem;">
                             <button type="submit" class="btn btn-primary">💾 Save Settings</button>
                             <button type="button" class="btn btn-secondary" id="recalculate-btn">🔄 Recalculate</button>
                             <button type="button" class="btn" id="rollover-btn" style="background: #f59e0b; color: white;">📅 Rollover Month</button>
@@ -320,6 +207,7 @@
         </main>
     </div>
 
+    <!-- Edit Transaction Modal -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h2>✏️ Edit Transaction</h2>
@@ -340,13 +228,38 @@
                 <div class="form-group">
                     <label for="edit-bank">Bank</label>
                     <select id="edit-bank" required>
-                        <option value="sbi">SBI</option>
-                        <option value="uco">UCO</option>
+                        <option value="">Select Bank</option>
                     </select>
                 </div>
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">💾 Save</button>
                     <button type="button" class="btn btn-secondary" id="cancel-edit-btn">❌ Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Bank Modal -->
+    <div id="add-bank-modal" class="modal">
+        <div class="modal-content">
+            <h2>🏦 Add New Bank</h2>
+            <form id="add-bank-form">
+                <div class="form-group">
+                    <label for="bank-name">Bank Name</label>
+                    <input type="text" id="bank-name" placeholder="e.g., HDFC Bank" required>
+                </div>
+                <div class="form-group">
+                    <label for="bank-code">Bank Code</label>
+                    <input type="text" id="bank-code" placeholder="e.g., hdfc (lowercase, no spaces)" required>
+                    <small style="color: #64748b;">Only letters and numbers, no spaces</small>
+                </div>
+                <div class="form-group">
+                    <label for="bank-color">Bank Color</label>
+                    <input type="color" id="bank-color" value="#2563eb">
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">➕ Add Bank</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-bank-btn">❌ Cancel</button>
                 </div>
             </form>
         </div>
