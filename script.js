@@ -1,21 +1,15 @@
-
 /**
- * Personal Balance Sheet Manager - Frontend
- * Uses JSONP to bypass CORS restrictions
+ * Personal Balance Sheet Manager - Frontend (WORKING)
  */
 
-// REPLACE THIS WITH YOUR /exec URL (NOT /dev)
+// ⚠️ REPLACE WITH YOUR /exec URL ⚠️
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxHOYtvKHeb5z0bJm7w84bal-169HYBgjrkrSSeUFrkA5c3UF7-pTql8tXj2h_KL54wlg/exec';
 
 let transactions = [];
 let dashboardData = {};
 
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Initializing...');
+    console.log('🚀 App starting...');
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     document.getElementById('new-date').valueAsDate = new Date();
     
@@ -25,65 +19,46 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
 });
 
-// ============================================================================
-// API CALLS USING JSONP
-// ============================================================================
-
-function apiCallJSONP(action) {
+function apiCall(action, params = {}) {
     return new Promise((resolve, reject) => {
-        const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         const script = document.createElement('script');
+        
         const timeout = setTimeout(() => {
             cleanup();
-            reject(new Error('Request timeout'));
+            reject(new Error('Timeout'));
         }, 30000);
         
         window[callbackName] = (data) => {
             clearTimeout(timeout);
             cleanup();
+            console.log(`✅ Response (${action}):`, data);
             resolve(data);
         };
         
         function cleanup() {
             delete window[callbackName];
-            if (script.parentNode) {
-                script.parentNode.removeChild(script);
-            }
+            if (script.parentNode) script.parentNode.removeChild(script);
         }
         
-        script.src = `${API_BASE_URL}?action=${action}&callback=${callbackName}&_=${Date.now()}`;
+        const urlParams = new URLSearchParams({
+            action: action,
+            callback: callbackName,
+            _t: Date.now(),
+            ...params
+        });
+        
+        script.src = `${API_BASE_URL}?${urlParams.toString()}`;
         script.onerror = () => {
             clearTimeout(timeout);
             cleanup();
-            reject(new Error('Script load error'));
+            reject(new Error('Script error'));
         };
         
+        console.log(`📤 Request: ${action}`, params);
         document.head.appendChild(script);
     });
 }
-
-function apiCallPOST(action, params = {}) {
-    showLoading();
-    return fetch(API_BASE_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action, params }),
-        headers: { 'Content-Type': 'text/plain' },
-        mode: 'no-cors'
-    })
-    .then(() => {
-        hideLoading();
-        return { success: true };
-    })
-    .catch(err => {
-        hideLoading();
-        console.error('Error:', err);
-        return { success: false, error: err.message };
-    });
-}
-
-// ============================================================================
-// EVENT LISTENERS
-// ============================================================================
 
 function setupListeners() {
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -95,8 +70,6 @@ function setupListeners() {
     document.getElementById('edit-form').addEventListener('submit', handleEditTransaction);
     document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
     document.getElementById('recalculate-btn').addEventListener('click', handleRecalculate);
-    document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
-    document.getElementById('import-file').addEventListener('change', handleImport);
     document.getElementById('export-btn').addEventListener('click', handleExport);
 }
 
@@ -111,14 +84,10 @@ function switchPage(pageName) {
     else if (pageName === 'settings') loadSettings();
 }
 
-// ============================================================================
-// DASHBOARD
-// ============================================================================
-
 async function loadDashboard() {
     showLoading();
     try {
-        const result = await apiCallJSONP('getDashboard');
+        const result = await apiCall('getDashboard');
         hideLoading();
         
         if (result.success && result.data) {
@@ -131,42 +100,34 @@ async function loadDashboard() {
             document.getElementById('combined-gross-value').textContent = formatCurrency(dashboardData.combined_gross);
             document.getElementById('combined-net-value').textContent = formatCurrency(dashboardData.combined_net);
             document.getElementById('last-updated').textContent = formatDateTime(dashboardData.last_updated);
-        } else {
-            showToast('Failed to load dashboard', 'error');
         }
     } catch (error) {
         hideLoading();
-        showToast('Error: ' + error.message, 'error');
+        showToast('❌ Dashboard error: ' + error.message, 'error');
     }
 }
-
-// ============================================================================
-// TRANSACTIONS
-// ============================================================================
 
 async function loadTransactions() {
     showLoading();
     try {
-        const result = await apiCallJSONP('getTransactions');
+        const result = await apiCall('getTransactions');
         hideLoading();
         
         if (result.success && result.data) {
             transactions = result.data;
             renderTransactions();
             updateSummary();
-        } else {
-            showToast('Failed to load transactions', 'error');
         }
     } catch (error) {
         hideLoading();
-        showToast('Error: ' + error.message, 'error');
+        showToast('❌ Transactions error: ' + error.message, 'error');
     }
 }
 
 function renderTransactions() {
     const tbody = document.getElementById('transactions-tbody');
     if (transactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#64748b;">No transactions found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;">No transactions yet. Add one above! 👆</td></tr>';
         return;
     }
     
@@ -196,24 +157,43 @@ function updateSummary() {
 
 async function handleAddTransaction(e) {
     e.preventDefault();
+    
     const tx = {
         date: document.getElementById('new-date').value,
-        description: document.getElementById('new-description').value,
+        description: encodeURIComponent(document.getElementById('new-description').value),
         amount: parseFloat(document.getElementById('new-amount').value),
         bank: document.getElementById('new-bank').value
     };
     
-    if (!validateTransaction(tx)) return;
+    console.log('📝 Adding transaction:', tx);
     
-    await apiCallPOST('addTransaction', tx);
-    showToast('Added! ✅ Refreshing...', 'success');
-    document.getElementById('quick-add-form').reset();
-    document.getElementById('new-date').valueAsDate = new Date();
+    if (!tx.date) { showToast('❌ Date required', 'error'); return; }
+    if (isNaN(tx.amount) || tx.amount <= 0) { showToast('❌ Invalid amount', 'error'); return; }
+    if (!tx.bank) { showToast('❌ Select bank', 'error'); return; }
     
-    setTimeout(() => {
-        loadTransactions();
-        loadDashboard();
-    }, 1500);
+    showLoading();
+    try {
+        const result = await apiCall('addTransaction', tx);
+        hideLoading();
+        
+        console.log('Response:', result);
+        
+        if (result.success) {
+            showToast('✅ Transaction added! ID: ' + result.id, 'success');
+            document.getElementById('quick-add-form').reset();
+            document.getElementById('new-date').valueAsDate = new Date();
+            
+            setTimeout(() => {
+                loadTransactions();
+                loadDashboard();
+            }, 500);
+        } else {
+            showToast('❌ Failed: ' + result.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('❌ Error: ' + error.message, 'error');
+    }
 }
 
 function editTransaction(id) {
@@ -229,48 +209,67 @@ function editTransaction(id) {
 
 async function handleEditTransaction(e) {
     e.preventDefault();
+    
     const id = parseInt(document.getElementById('edit-id').value);
     const tx = {
+        id: id,
         date: document.getElementById('edit-date').value,
-        description: document.getElementById('edit-description').value,
+        description: encodeURIComponent(document.getElementById('edit-description').value),
         amount: parseFloat(document.getElementById('edit-amount').value),
         bank: document.getElementById('edit-bank').value
     };
     
-    if (!validateTransaction(tx)) return;
-    
-    await apiCallPOST('updateTransaction', { id, transaction: tx });
-    showToast('Updated! ✅ Refreshing...', 'success');
-    closeEditModal();
-    
-    setTimeout(() => {
-        loadTransactions();
-        loadDashboard();
-    }, 1500);
+    showLoading();
+    try {
+        const result = await apiCall('updateTransaction', tx);
+        hideLoading();
+        
+        if (result.success) {
+            showToast('✅ Updated!', 'success');
+            closeEditModal();
+            setTimeout(() => {
+                loadTransactions();
+                loadDashboard();
+            }, 500);
+        } else {
+            showToast('❌ ' + result.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('❌ Error: ' + error.message, 'error');
+    }
 }
 
 async function deleteTransaction(id) {
     if (!confirm('Delete this transaction?')) return;
-    await apiCallPOST('deleteTransaction', { id });
-    showToast('Deleted! 🗑️ Refreshing...', 'success');
     
-    setTimeout(() => {
-        loadTransactions();
-        loadDashboard();
-    }, 1500);
+    showLoading();
+    try {
+        const result = await apiCall('deleteTransaction', { id });
+        hideLoading();
+        
+        if (result.success) {
+            showToast('✅ Deleted!', 'success');
+            setTimeout(() => {
+                loadTransactions();
+                loadDashboard();
+            }, 500);
+        } else {
+            showToast('❌ ' + result.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('❌ Error: ' + error.message, 'error');
+    }
 }
 
 function closeEditModal() {
     document.getElementById('edit-modal').classList.remove('active');
 }
 
-// ============================================================================
-// SETTINGS
-// ============================================================================
-
 async function loadSettings() {
     try {
-        const result = await apiCallJSONP('getSettings');
+        const result = await apiCall('getSettings');
         if (result.success && result.data) {
             document.getElementById('salary-input').value = result.data.salary_amount || 0;
             document.getElementById('sbi-opening-input').value = result.data.opening_balance_sbi || 0;
@@ -283,56 +282,39 @@ async function loadSettings() {
 
 async function handleSaveSettings(e) {
     e.preventDefault();
+    
     const settings = {
         salary_amount: parseFloat(document.getElementById('salary-input').value),
         opening_balance_sbi: parseFloat(document.getElementById('sbi-opening-input').value),
         opening_balance_uco: parseFloat(document.getElementById('uco-opening-input').value)
     };
     
-    await apiCallPOST('updateSettings', settings);
-    showToast('Settings saved! ✅ Refreshing...', 'success');
-    
-    setTimeout(() => loadDashboard(), 1500);
+    showLoading();
+    try {
+        const result = await apiCall('updateSettings', settings);
+        hideLoading();
+        
+        if (result.success) {
+            showToast('✅ Settings saved!', 'success');
+            setTimeout(() => loadDashboard(), 500);
+        } else {
+            showToast('❌ ' + result.error, 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        showToast('❌ Error: ' + error.message, 'error');
+    }
 }
 
 async function handleRecalculate() {
-    showToast('Recalculating...', 'info');
     await Promise.all([loadDashboard(), loadTransactions()]);
-    showToast('Done! ✅', 'success');
-}
-
-// ============================================================================
-// IMPORT/EXPORT
-// ============================================================================
-
-async function handleImport(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-        const rows = parseCSV(event.target.result);
-        if (rows.length === 0) {
-            showToast('No data found', 'error');
-            return;
-        }
-        
-        await apiCallPOST('importTransactions', { data: rows });
-        showToast('Import started! Refreshing...', 'success');
-        
-        setTimeout(() => {
-            loadTransactions();
-            loadDashboard();
-        }, 2000);
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+    showToast('✅ Recalculated!', 'success');
 }
 
 async function handleExport() {
     showLoading();
     try {
-        const result = await apiCallJSONP('exportToCSV');
+        const result = await apiCall('exportToCSV');
         hideLoading();
         
         if (result.success && result.data) {
@@ -343,24 +325,12 @@ async function handleExport() {
             a.download = `balance_sheet_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast('Exported! 📤', 'success');
+            showToast('✅ Exported!', 'success');
         }
     } catch (error) {
         hideLoading();
-        showToast('Export failed', 'error');
+        showToast('❌ Export failed', 'error');
     }
-}
-
-// ============================================================================
-// UTILITIES
-// ============================================================================
-
-function validateTransaction(tx) {
-    if (!tx.date) { showToast('Date required', 'error'); return false; }
-    if (!tx.description.trim()) { showToast('Description required', 'error'); return false; }
-    if (isNaN(tx.amount) || tx.amount <= 0) { showToast('Invalid amount', 'error'); return false; }
-    if (tx.bank !== 'sbi' && tx.bank !== 'uco') { showToast('Select bank', 'error'); return false; }
-    return true;
 }
 
 function formatCurrency(val) {
@@ -369,7 +339,11 @@ function formatCurrency(val) {
 
 function formatDateTime(iso) {
     if (!iso) return 'Never';
-    return new Date(iso).toLocaleString('en-IN', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    try {
+        return new Date(iso).toLocaleString('en-IN', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    } catch(e) {
+        return iso;
+    }
 }
 
 function escapeHtml(text) {
@@ -378,15 +352,9 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function parseCSV(text) {
-    return text.split('\n').filter(l => l.trim()).map(line => {
-        const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-        return values.map(v => v.trim().replace(/^"(.*)"$/, '$1'));
-    });
-}
-
 function showLoading() { document.getElementById('loading-overlay').classList.add('active'); }
 function hideLoading() { document.getElementById('loading-overlay').classList.remove('active'); }
+
 function showToast(msg, type='info') {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -396,3 +364,5 @@ function showToast(msg, type='info') {
 
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;
+
+console.log('✅ App loaded!');
