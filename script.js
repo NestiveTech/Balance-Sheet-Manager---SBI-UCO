@@ -1,3 +1,4 @@
+
 /**
  * Personal Balance Sheet Manager - Frontend
  * Uses JSONP to bypass CORS restrictions
