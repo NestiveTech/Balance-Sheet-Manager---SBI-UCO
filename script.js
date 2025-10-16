@@ -1,18 +1,11 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// SINGLE-USER BALANCE SHEET - NO LOGIN (Your Logic)
-// Previous Balance + Salary = Opening Balance
-// Version: SINGLE-USER-PREV-BALANCE
-// ═══════════════════════════════════════════════════════════════════════════
-
-// REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
-// ═══════════════════════════════════════════════════════════════════════════
 // BALANCE SHEET MANAGER - FINAL VERSION
 // Previous Balance + Monthly Input = Opening Balance
 // ═══════════════════════════════════════════════════════════════════════════
 
 // REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
-// const API_BASE_URL = 'YOUR_DEPLOYMENT_URL_HERE';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
+
 
 let transactions = [];
 let dashboardData = {};
