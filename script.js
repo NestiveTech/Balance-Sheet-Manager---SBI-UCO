@@ -9,7 +9,7 @@
 // CONFIGURATION - ⚠️ UPDATE THIS WITH YOUR DEPLOYMENT URL ⚠️
 // ============================================================================
 
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxHOYtvKHeb5z0bJm7w84bal-169HYBgjrkrSSeUFrkA5c3UF7-pTql8tXj2h_KL54wlg/exec';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbzh5QRh5UHL4mQrWapjAsTA7b94VKWzMXmWScDSNAAoH1MH5S8LQoawgnR5xa5WojhJDw/exec';
 
 
 // ============================================================================
