@@ -55,57 +55,41 @@
 
     <!-- APP SCREEN (After Login) -->
     <div id="app-screen" style="display: none;">
-        <!-- SETUP SCREEN (First-time users) -->
-        <div id="setup-screen" style="display: none;">
-            <div class="setup-container">
-                <div class="setup-card">
-                    <h1 style="text-align: center; color: #2563eb; margin-bottom: 1rem;">🎉 Welcome to Balance Sheet Manager!</h1>
-                    <p style="text-align: center; color: #64748b; margin-bottom: 2rem;">
-                        Let's set up your personal spreadsheet in YOUR Google Drive
-                    </p>
-                    
-                    <div class="setup-steps">
-                        <div class="setup-step">
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <h3>Create a Google Sheet</h3>
-                                <p>Open Google Drive and create a new Google Sheet</p>
-                                <a href="https://sheets.new" target="_blank" class="btn btn-primary" style="display: inline-flex; margin-top: 0.5rem;">
-                                    📄 Create New Sheet
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <div class="setup-step">
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <h3>Share with the App</h3>
-                                <p>Click "Share" in your spreadsheet and add this email as <strong>Editor</strong>:</p>
-                                <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin: 1rem 0; display: flex; align-items: center; gap: 1rem;">
-                                    <code id="app-email" style="flex: 1; font-size: 0.95rem; color: #2563eb;">Loading...</code>
-                                    <button onclick="copyAppEmail()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Copy</button>
-                                </div>
-                                <small style="color: #64748b;">⚠️ Make sure to give <strong>Editor</strong> access, not just Viewer</small>
-                            </div>
-                        </div>
-                        
-                        <div class="setup-step">
-                            <div class="step-number">3</div>
-                            <div class="step-content">
-                                <h3>Enter Spreadsheet URL</h3>
-                                <p>Copy the URL from your browser and paste it below:</p>
-                                <div class="form-group" style="margin-top: 1rem;">
-                                    <input type="text" id="sheet-url-input" placeholder="https://docs.google.com/spreadsheets/d/..." style="width: 100%;">
-                                </div>
-                                <button onclick="handleSetupSubmit()" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
-                                    ✅ Register My Spreadsheet
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- SETUP SCREEN (One-Click) -->
+<div id="setup-screen" style="display: none;">
+    <div class="setup-container">
+        <div class="setup-card">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+                <h1 style="color: #2563eb; margin-bottom: 0.5rem;">Welcome to Balance Sheet Manager!</h1>
+                <p style="color: #64748b; font-size: 1.1rem;">
+                    Let's create your personal spreadsheet
+                </p>
             </div>
+            
+            <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #2563eb;">
+                <h3 style="color: #1e40af; margin-bottom: 1rem;">🔐 What You'll Get:</h3>
+                <ul style="margin: 0; padding-left: 1.5rem; color: #64748b; line-height: 2;">
+                    <li>Personal spreadsheet in YOUR Google Drive</li>
+                    <li>Pre-formatted with all necessary sheets</li>
+                    <li>Default banks (SBI & UCO) - you can add more</li>
+                    <li>Full ownership and control of your data</li>
+                    <li>Instant access to dashboard</li>
+                </ul>
+            </div>
+            
+            <button onclick="handleCreateSpreadsheet()" class="btn btn-primary" style="width: 100%; padding: 1.25rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                <span style="font-size: 1.5rem;">📄</span>
+                Create My Spreadsheet
+            </button>
+            
+            <p style="text-align: center; color: #64748b; margin-top: 1.5rem; font-size: 0.9rem;">
+                ⏱️ Takes less than 5 seconds • No configuration needed
+            </p>
         </div>
+    </div>
+</div>
+
 
         <!-- MAIN APP (Existing users) -->
         <div id="main-app" style="display: none;">

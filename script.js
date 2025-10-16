@@ -93,6 +93,46 @@ async function checkUserSetup() {
         showToast('❌ ' + e.message, 'error');
     }
 }
+async function handleCreateSpreadsheet() {
+    showLoading();
+    
+    try {
+        const r = await apiCall('createSpreadsheet');
+        hideLoading();
+        
+        if (r.success) {
+            showToast('✅ ' + r.message, 'success');
+            
+            // Update sheet link
+            if (r.sheetUrl) {
+                document.getElementById('sheet-link').href = r.sheetUrl;
+                document.getElementById('sheet-link').style.display = 'inline-flex';
+            }
+            
+            // Hide setup, show main app
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            
+            // Initialize the app
+            initializeApp();
+            
+            // Show success message with spreadsheet link
+            setTimeout(() => {
+                showToast(`✅ Spreadsheet created!\n\n📊 View it here:\n${r.sheetUrl}`, 'success');
+            }, 1000);
+            
+        } else {
+            showToast('❌ ' + r.error, 'error');
+        }
+    } catch (e) {
+        hideLoading();
+        console.error('Create error:', e);
+        showToast('❌ Failed to create spreadsheet: ' + e.message, 'error');
+    }
+}
+
+// Add to global functions
+window.handleCreateSpreadsheet = handleCreateSpreadsheet;
 
 
 function showSetupScreen() {
