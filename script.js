@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// BALANCE SHEET MANAGER - COMPLETE JAVASCRIPT (Clean Console)
-// Multi-User | Custom Banks | Hybrid Authentication | User Drive Creation
-// Version: 4.0 FINAL
+// BALANCE SHEET MANAGER - MOBILE OPTIMIZED (v4.2 FINAL)
+// Multi-User | Custom Banks | Hybrid Auth | Mobile Network Fixes
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ════════════════════════════════════════════════════════════
@@ -21,7 +20,7 @@
             msg.includes('Intervention') ||
             msg.includes('chrome-extension')
         ) {
-            return; // Suppress these warnings
+            return;
         }
         originalWarn.apply(console, args);
     };
@@ -32,11 +31,31 @@
             msg.includes('Cross-Origin-Opener-Policy') ||
             msg.includes('postMessage')
         ) {
-            return; // Suppress CORS errors from Google Sign-In
+            return;
         }
         originalError.apply(console, args);
     };
 })();
+
+// ════════════════════════════════════════════════════════════
+// NETWORK STATUS MONITORING
+// ════════════════════════════════════════════════════════════
+
+window.addEventListener('online', () => {
+    console.log('✅ Network: Online');
+    if (currentUser) {
+        showToast('✅ Connection restored', 'success');
+    }
+});
+
+window.addEventListener('offline', () => {
+    console.log('⚠️ Network: Offline');
+    showToast('⚠️ No internet connection', 'warning');
+});
+
+function isOnline() {
+    return navigator.onLine;
+}
 
 // REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
@@ -116,6 +135,17 @@ function handleSignOut() {
 }
 
 async function initializeUser() {
+    // Check network first
+    if (!isOnline()) {
+        hideLoading();
+        showToast('⚠️ No internet connection. Please check your network.', 'warning');
+        return;
+    }
+    
+    console.log('📡 API URL:', API_BASE_URL);
+    console.log('👤 User:', currentUser.email);
+    console.log('🌐 Online:', navigator.onLine);
+    
     try {
         const r = await apiCall('initUser');
         hideLoading();
@@ -152,19 +182,33 @@ async function initializeUser() {
         }
     } catch (e) {
         hideLoading();
-        showToast('❌ ' + e.message, 'error');
+        console.error('❌ Initialization error:', e);
+        showToast('❌ Connection error: ' + e.message + '\n\nPlease check your internet and try again.', 'error');
     }
 }
 
 // ════════════════════════════════════════════════════════════
-// API CALLS
+// API CALLS WITH RETRY LOGIC (MOBILE OPTIMIZED)
 // ════════════════════════════════════════════════════════════
 
-function apiCall(action, params = {}) {
+function apiCall(action, params = {}, retries = 3) {
     return new Promise((resolve, reject) => {
+        if (!isOnline()) {
+            reject(new Error('No internet connection'));
+            return;
+        }
+        
         const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         const script = document.createElement('script');
-        const timeout = setTimeout(() => { cleanup(); reject(new Error('Request timeout')); }, 30000);
+        const timeout = setTimeout(() => { 
+            cleanup(); 
+            if (retries > 0) {
+                console.log(`⚠️ Timeout, retrying ${action}... (${retries} attempts left)`);
+                resolve(apiCall(action, params, retries - 1));
+            } else {
+                reject(new Error('Request timeout. Please check your connection and try again.'));
+            }
+        }, 60000); // 60 seconds for mobile
         
         window[cb] = (data) => { 
             clearTimeout(timeout); 
@@ -192,7 +236,14 @@ function apiCall(action, params = {}) {
         script.onerror = () => { 
             clearTimeout(timeout); 
             cleanup(); 
-            reject(new Error('Network error')); 
+            if (retries > 0) {
+                console.log(`⚠️ Network error on ${action}, retrying... (${retries} attempts left)`);
+                setTimeout(() => {
+                    resolve(apiCall(action, params, retries - 1));
+                }, 2000); // Wait 2 seconds before retry
+            } else {
+                reject(new Error('Network error. Please check your connection.')); 
+            }
         };
         document.head.appendChild(script);
     });
@@ -712,7 +763,12 @@ function escapeHtml(t) {
 }
 
 function showLoading() { 
-    document.getElementById('loading-overlay').classList.add('active'); 
+    const overlay = document.getElementById('loading-overlay');
+    const text = overlay.querySelector('p');
+    if (text) {
+        text.textContent = 'Loading... Please wait';
+    }
+    overlay.classList.add('active'); 
 }
 
 function hideLoading() { 
@@ -723,7 +779,7 @@ function showToast(m, t='info') {
     const toast = document.getElementById('toast'); 
     toast.textContent = m; 
     toast.className = `toast ${t} active`; 
-    setTimeout(() => toast.classList.remove('active'), 4000); 
+    setTimeout(() => toast.classList.remove('active'), 5000); // 5 seconds for mobile
 }
 
 // ════════════════════════════════════════════════════════════
@@ -738,14 +794,15 @@ window.handleSimpleLogin = handleSimpleLogin;
 
 // Styled console output
 console.log(
-    '%c💰 Balance Sheet Manager%c v4.0 FINAL',
+    '%c💰 Balance Sheet Manager%c v4.2 MOBILE',
     'color: #2563eb; font-size: 20px; font-weight: bold;',
     'color: #64748b; font-size: 12px; font-weight: normal;'
 );
 console.log(
-    '%c✅ System Ready | %c🔐 Auth Enabled | %c📊 Multi-Bank | %c☁️ User Drive',
+    '%c✅ System Ready | %c🔐 Auth Enabled | %c📊 Multi-Bank | %c☁️ User Drive | %c📱 Mobile Fix',
     'color: #16a34a; font-weight: bold;',
     'color: #f59e0b; font-weight: bold;',
     'color: #2563eb; font-weight: bold;',
-    'color: #7c3aed; font-weight: bold;'
+    'color: #7c3aed; font-weight: bold;',
+    'color: #ec4899; font-weight: bold;'
 );
