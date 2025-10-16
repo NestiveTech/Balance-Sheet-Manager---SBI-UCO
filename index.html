@@ -3,23 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Balance Sheet Manager - SBI/UCO</title>
+    <title>Balance Sheet Manager - SBI/UCO</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- HEADER -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Header -->
     <header class="header">
         <div class="container">
             <h1 class="header-title">BALANCE SHEET — <span id="currentYear"></span></h1>
-            <p class="header-subtitle">SBI / UCO Bank Manager with Present Balance</p>
+            <p class="header-subtitle">SBI / UCO Bank Manager | Total = Opening + Previous</p>
         </div>
     </header>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- NAVIGATION -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Navigation -->
     <nav class="nav">
         <div class="container">
             <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
@@ -29,9 +25,9 @@
     </nav>
 
     <main class="container">
-        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- ════════════════════════════════════════════════════════════ -->
         <!-- DASHBOARD PAGE -->
-        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- ════════════════════════════════════════════════════════════ -->
         <div id="dashboard-page" class="page active">
             <div class="dashboard-grid">
                 <!-- Salary -->
@@ -42,49 +38,49 @@
 
                 <!-- SBI Section -->
                 <div class="tile tile-sbi">
-                    <div class="tile-label">🏦 SBI Opening</div>
+                    <div class="tile-label">💰 SBI Total Balance</div>
                     <div class="tile-value" id="sbi-gross-value">₹0.00</div>
                 </div>
 
                 <div class="tile tile-sbi">
-                    <div class="tile-label">💳 SBI Present</div>
+                    <div class="tile-label">🏦 SBI Opening</div>
                     <div class="tile-value" id="sbi-present-value">₹0.00</div>
                 </div>
 
                 <div class="tile tile-sbi">
-                    <div class="tile-label">💵 SBI Net</div>
+                    <div class="tile-label">💵 SBI Net Balance</div>
                     <div class="tile-value" id="sbi-net-value">₹0.00</div>
                 </div>
 
                 <!-- UCO Section -->
                 <div class="tile tile-uco">
-                    <div class="tile-label">🏦 UCO Opening</div>
+                    <div class="tile-label">💰 UCO Total Balance</div>
                     <div class="tile-value" id="uco-gross-value">₹0.00</div>
                 </div>
 
                 <div class="tile tile-uco">
-                    <div class="tile-label">💳 UCO Present</div>
+                    <div class="tile-label">🏦 UCO Opening</div>
                     <div class="tile-value" id="uco-present-value">₹0.00</div>
                 </div>
 
                 <div class="tile tile-uco">
-                    <div class="tile-label">💵 UCO Net</div>
+                    <div class="tile-label">💵 UCO Net Balance</div>
                     <div class="tile-value" id="uco-net-value">₹0.00</div>
                 </div>
 
                 <!-- Combined Section -->
                 <div class="tile tile-combined">
-                    <div class="tile-label">📈 Combined Opening</div>
+                    <div class="tile-label">📈 Combined Total</div>
                     <div class="tile-value" id="combined-gross-value">₹0.00</div>
                 </div>
 
                 <div class="tile tile-combined">
-                    <div class="tile-label">💎 Combined Present</div>
+                    <div class="tile-label">🏦 Combined Opening</div>
                     <div class="tile-value" id="combined-present-value">₹0.00</div>
                 </div>
 
                 <div class="tile tile-combined">
-                    <div class="tile-label">📊 Combined Net</div>
+                    <div class="tile-label">💎 Combined Net</div>
                     <div class="tile-value" id="combined-net-value">₹0.00</div>
                 </div>
             </div>
@@ -94,9 +90,9 @@
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- ════════════════════════════════════════════════════════════ -->
         <!-- TRANSACTIONS PAGE -->
-        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- ════════════════════════════════════════════════════════════ -->
         <div id="transactions-page" class="page">
             <!-- Quick Add Form -->
             <div class="card">
@@ -150,47 +146,78 @@
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- ════════════════════════════════════════════════════════════ -->
         <!-- SETTINGS PAGE -->
-        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- ════════════════════════════════════════════════════════════ -->
         <div id="settings-page" class="page">
             <div class="card">
                 <h2>⚙️ Financial Settings</h2>
                 <form id="settings-form" class="settings-form">
                     <div class="form-group">
-                        <label for="salary-input">💰 Salary Amount</label>
+                        <label for="salary-input">💰 Monthly Salary</label>
                         <input type="number" id="salary-input" step="0.01" min="0" required>
+                        <small style="color: #64748b; display: block; margin-top: 0.25rem;">Stored for reference only</small>
                     </div>
 
-                    <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #00529B;">🏦 SBI Bank</h3>
+                    <h3 style="margin: 2rem 0 1rem 0; color: #00529B; border-bottom: 2px solid #00529B; padding-bottom: 0.5rem;">
+                        🏦 SBI Bank
+                    </h3>
                     
                     <div class="form-group">
                         <label for="sbi-opening-input">Opening Balance</label>
                         <input type="number" id="sbi-opening-input" step="0.01" min="0" required>
+                        <small style="color: #64748b; display: block; margin-top: 0.25rem;">Current month starting balance</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="sbi-present-input">Present Balance (Current Actual)</label>
-                        <input type="number" id="sbi-present-input" step="0.01" min="0" required>
+                        <label for="sbi-previous-input">Previous Balance</label>
+                        <input type="number" id="sbi-previous-input" step="0.01" min="0" required>
+                        <small style="color: #64748b; display: block; margin-top: 0.25rem;">Last month's closing balance</small>
                     </div>
 
-                    <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #ED7D31;">🏦 UCO Bank</h3>
+                    <div style="background: #e0f2fe; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                        <strong>📊 Formula:</strong> Total SBI = Opening + Previous
+                    </div>
+
+                    <h3 style="margin: 2rem 0 1rem 0; color: #ED7D31; border-bottom: 2px solid #ED7D31; padding-bottom: 0.5rem;">
+                        🏦 UCO Bank
+                    </h3>
                     
                     <div class="form-group">
                         <label for="uco-opening-input">Opening Balance</label>
                         <input type="number" id="uco-opening-input" step="0.01" min="0" required>
+                        <small style="color: #64748b; display: block; margin-top: 0.25rem;">Current month starting balance</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="uco-present-input">Present Balance (Current Actual)</label>
-                        <input type="number" id="uco-present-input" step="0.01" min="0" required>
+                        <label for="uco-previous-input">Previous Balance</label>
+                        <input type="number" id="uco-previous-input" step="0.01" min="0" required>
+                        <small style="color: #64748b; display: block; margin-top: 0.25rem;">Last month's closing balance</small>
                     </div>
 
-                    <div class="button-group">
+                    <div style="background: #ffedd5; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                        <strong>📊 Formula:</strong> Total UCO = Opening + Previous
+                    </div>
+
+                    <div class="button-group" style="margin-top: 2rem;">
                         <button type="submit" class="btn btn-primary">💾 Save All Settings</button>
                         <button type="button" class="btn btn-secondary" id="recalculate-btn">🔄 Recalculate</button>
+                        <button type="button" class="btn" id="rollover-btn" style="background: #f59e0b; color: white;">
+                            📅 Rollover to Next Month
+                        </button>
                     </div>
                 </form>
+            </div>
+
+            <div class="card" style="background: #f8fafc; border-left: 4px solid #2563eb;">
+                <h2>📘 How It Works</h2>
+                <div style="line-height: 2;">
+                    <p><strong>Step 1:</strong> Enter Opening and Previous Balance for both banks</p>
+                    <p><strong>Step 2:</strong> Total Balance = Opening + Previous</p>
+                    <p><strong>Step 3:</strong> Add transactions (expenses)</p>
+                    <p><strong>Step 4:</strong> Net Balance = Total - Expenses</p>
+                    <p><strong>Step 5:</strong> At month end, click "Rollover" to move Net → Previous</p>
+                </div>
             </div>
 
             <div class="card">
@@ -198,27 +225,23 @@
                 <div class="button-group">
                     <button class="btn btn-secondary" id="export-btn">📤 Export to CSV</button>
                 </div>
-                <p class="help-text">Export includes all balances and transactions</p>
+                <p style="color: #64748b; margin-top: 1rem; font-size: 0.875rem;">
+                    Export includes all balances, calculations, and transactions
+                </p>
             </div>
         </div>
     </main>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- LOADING OVERLAY -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="spinner"></div>
         <p>Processing...</p>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- TOAST NOTIFICATION -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- EDIT MODAL -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- Edit Modal -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h2>✏️ Edit Transaction</h2>
