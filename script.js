@@ -1,11 +1,45 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// BALANCE SHEET MANAGER - COMPLETE JAVASCRIPT
-// Multi-User | Custom Banks | Hybrid Authentication
+// BALANCE SHEET MANAGER - COMPLETE JAVASCRIPT (Clean Console)
+// Multi-User | Custom Banks | Hybrid Authentication | User Drive Creation
+// Version: 4.0 FINAL
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════
+// CONSOLE CLEANUP - SUPPRESS UNWANTED WARNINGS
+// ════════════════════════════════════════════════════════════
+
+(function() {
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    
+    console.warn = function(...args) {
+        const msg = args.join(' ');
+        if (
+            msg.includes('Slow network') ||
+            msg.includes('Fallback font') ||
+            msg.includes('Cross-Origin-Opener-Policy') ||
+            msg.includes('Intervention') ||
+            msg.includes('chrome-extension')
+        ) {
+            return; // Suppress these warnings
+        }
+        originalWarn.apply(console, args);
+    };
+    
+    console.error = function(...args) {
+        const msg = args.join(' ');
+        if (
+            msg.includes('Cross-Origin-Opener-Policy') ||
+            msg.includes('postMessage')
+        ) {
+            return; // Suppress CORS errors from Google Sign-In
+        }
+        originalError.apply(console, args);
+    };
+})();
 
 // REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
-
 
 let transactions = [];
 let dashboardData = {};
@@ -26,7 +60,7 @@ function handleCredentialResponse(response) {
         picture: payload.picture
     };
     
-    console.log('✅ User signed in with Google:', currentUser.email);
+    console.log('%c✅ User signed in with Google', 'color: #16a34a; font-weight: bold;', currentUser.email);
     
     showLoading();
     initializeUser();
@@ -62,7 +96,7 @@ function handleSimpleLogin(e) {
         picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2563eb&color=fff&size=128`
     };
     
-    console.log('✅ User logged in with email:', currentUser.email);
+    console.log('%c✅ User logged in with email', 'color: #16a34a; font-weight: bold;', currentUser.email);
     
     showLoading();
     initializeUser();
@@ -109,7 +143,7 @@ async function initializeUser() {
             loadSettings();
             
             if (r.newUser) {
-                showToast('✅ Welcome! Your personal spreadsheet has been created!', 'success');
+                showToast('✅ Welcome! Your personal spreadsheet has been created in your Drive!', 'success');
             } else {
                 showToast('✅ Welcome back!', 'success');
             }
@@ -693,7 +727,7 @@ function showToast(m, t='info') {
 }
 
 // ════════════════════════════════════════════════════════════
-// GLOBAL FUNCTIONS
+// GLOBAL FUNCTIONS & INITIALIZATION
 // ════════════════════════════════════════════════════════════
 
 window.editTransaction = editTransaction;
@@ -702,4 +736,16 @@ window.deleteBank = deleteBank;
 window.handleCredentialResponse = handleCredentialResponse;
 window.handleSimpleLogin = handleSimpleLogin;
 
-console.log('💰 Balance Sheet Manager loaded successfully!');
+// Styled console output
+console.log(
+    '%c💰 Balance Sheet Manager%c v4.0 FINAL',
+    'color: #2563eb; font-size: 20px; font-weight: bold;',
+    'color: #64748b; font-size: 12px; font-weight: normal;'
+);
+console.log(
+    '%c✅ System Ready | %c🔐 Auth Enabled | %c📊 Multi-Bank | %c☁️ User Drive',
+    'color: #16a34a; font-weight: bold;',
+    'color: #f59e0b; font-weight: bold;',
+    'color: #2563eb; font-weight: bold;',
+    'color: #7c3aed; font-weight: bold;'
+);
