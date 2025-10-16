@@ -1,5 +1,5 @@
 /**
- * BALANCE SHEET MANAGER - COMPLETE STYLES WITH CUSTOM BANKS
+ * BALANCE SHEET MANAGER - CUSTOM WARM EARTH TONE THEME
  */
 
 * {
@@ -9,25 +9,25 @@
 }
 
 :root {
-    --color-primary: #2563eb;
-    --color-sbi: #00529B;
-    --color-uco: #ED7D31;
-    --color-combined: #7030A0;
-    --color-success: #16a34a;
-    --color-danger: #dc2626;
-    --color-warning: #f59e0b;
-    --color-neutral: #64748b;
-    --color-bg: #f8fafc;
-    --color-card: #ffffff;
-    --color-border: #e2e8f0;
-    --color-text: #1e293b;
-    --color-text-light: #64748b;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-    --radius: 8px;
-    --radius-lg: 12px;
+    --color-primary: #C17817;
+    --color-sbi: #2D5F6F;
+    --color-uco: #D4825C;
+    --color-combined: #8E4585;
+    --color-success: #5B8C5A;
+    --color-danger: #C74B50;
+    --color-warning: #E8A55C;
+    --color-neutral: #7A7B7C;
+    --color-bg: #F7F3ED;
+    --color-card: #FDFBF7;
+    --color-border: #E5DFD3;
+    --color-text: #2C2416;
+    --color-text-light: #8B8379;
+    --shadow-sm: 0 1px 2px 0 rgb(44 36 22 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(44 36 22 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(44 36 22 / 0.12);
+    --shadow-xl: 0 20px 25px -5px rgb(44 36 22 / 0.15);
+    --radius: 12px;
+    --radius-lg: 16px;
     --transition: all 0.3s ease;
 }
 
@@ -45,7 +45,7 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #C17817 0%, #8E4585 100%);
     position: relative;
     overflow: hidden;
 }
@@ -104,7 +104,7 @@ body {
 
 /* Header */
 .header {
-    background: linear-gradient(135deg, var(--color-primary) 0%, #1e40af 100%);
+    background: linear-gradient(135deg, #C17817 0%, #9A5F12 100%);
     color: white;
     padding: 1.5rem 0;
     box-shadow: var(--shadow-md);
@@ -283,12 +283,12 @@ body {
 }
 
 .salary-header {
-    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    background: linear-gradient(135deg, #2D5F6F 0%, #1F4450 100%);
     color: white;
 }
 
 .combined-header {
-    background: linear-gradient(135deg, #7030A0 0%, #552080 100%);
+    background: linear-gradient(135deg, #8E4585 0%, #6A3464 100%);
     color: white;
 }
 
@@ -330,12 +330,12 @@ body {
 
 .tile-neutral {
     border-color: var(--color-neutral);
-    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    background: linear-gradient(135deg, #FDFBF7 0%, #F7F3ED 100%);
 }
 
 .tile-combined {
     border-color: var(--color-combined);
-    background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%);
+    background: linear-gradient(135deg, #FDFBF7 0%, #F5EDF5 100%);
 }
 
 .tile-icon {
@@ -456,7 +456,7 @@ input:focus,
 select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 3px rgba(193, 120, 23, 0.1);
 }
 
 /* Bank Settings */
@@ -495,7 +495,7 @@ select:focus {
 }
 
 .btn-primary:hover {
-    background: #1e40af;
+    background: #9A5F12;
 }
 
 .btn-secondary {
@@ -504,7 +504,7 @@ select:focus {
 }
 
 .btn-secondary:hover {
-    background: #475569;
+    background: #5F6061;
 }
 
 .btn-danger {
@@ -515,7 +515,7 @@ select:focus {
 }
 
 .btn-danger:hover {
-    background: #b91c1c;
+    background: #A83B3F;
 }
 
 .btn-edit {
@@ -527,7 +527,7 @@ select:focus {
 }
 
 .btn-edit:hover {
-    background: #d97706;
+    background: #D4904A;
 }
 
 .button-group {
@@ -624,7 +624,7 @@ select:focus {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(44, 36, 22, 0.5);
     z-index: 1000;
     align-items: center;
     justify-content: center;
@@ -652,7 +652,7 @@ select:focus {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(247, 243, 237, 0.95);
     z-index: 9999;
     align-items: center;
     justify-content: center;
