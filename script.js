@@ -1,51 +1,36 @@
+
+// REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
+
+
 // ═══════════════════════════════════════════════════════════════════════════
-// BALANCE SHEET MANAGER - MOBILE OPTIMIZED (v4.2 FINAL)
-// Multi-User | Custom Banks | Hybrid Auth | Mobile Network Fixes
+// BALANCE SHEET MANAGER - MOBILE FIX (Fetch API)
+// Version 4.3 FINAL - Mobile Network Error Fixed
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ════════════════════════════════════════════════════════════
-// CONSOLE CLEANUP - SUPPRESS UNWANTED WARNINGS
-// ════════════════════════════════════════════════════════════
-
+// Console cleanup
 (function() {
     const originalWarn = console.warn;
     const originalError = console.error;
     
     console.warn = function(...args) {
         const msg = args.join(' ');
-        if (
-            msg.includes('Slow network') ||
-            msg.includes('Fallback font') ||
-            msg.includes('Cross-Origin-Opener-Policy') ||
-            msg.includes('Intervention') ||
-            msg.includes('chrome-extension')
-        ) {
-            return;
-        }
+        if (msg.includes('Slow network') || msg.includes('Fallback font') || 
+            msg.includes('Cross-Origin') || msg.includes('Intervention') || 
+            msg.includes('chrome-extension')) return;
         originalWarn.apply(console, args);
     };
     
     console.error = function(...args) {
         const msg = args.join(' ');
-        if (
-            msg.includes('Cross-Origin-Opener-Policy') ||
-            msg.includes('postMessage')
-        ) {
-            return;
-        }
+        if (msg.includes('Cross-Origin') || msg.includes('postMessage')) return;
         originalError.apply(console, args);
     };
 })();
 
-// ════════════════════════════════════════════════════════════
-// NETWORK STATUS MONITORING
-// ════════════════════════════════════════════════════════════
-
+// Network monitoring
 window.addEventListener('online', () => {
     console.log('✅ Network: Online');
-    if (currentUser) {
-        showToast('✅ Connection restored', 'success');
-    }
+    if (currentUser) showToast('✅ Connection restored', 'success');
 });
 
 window.addEventListener('offline', () => {
@@ -66,7 +51,7 @@ let currentUser = null;
 let userBanks = [];
 
 // ════════════════════════════════════════════════════════════
-// AUTHENTICATION - HYBRID (GOOGLE + EMAIL)
+// AUTHENTICATION
 // ════════════════════════════════════════════════════════════
 
 function handleCredentialResponse(response) {
@@ -79,8 +64,7 @@ function handleCredentialResponse(response) {
         picture: payload.picture
     };
     
-    console.log('%c✅ User signed in with Google', 'color: #16a34a; font-weight: bold;', currentUser.email);
-    
+    console.log('%c✅ User signed in', 'color: #16a34a; font-weight: bold;', currentUser.email);
     showLoading();
     initializeUser();
 }
@@ -115,8 +99,7 @@ function handleSimpleLogin(e) {
         picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2563eb&color=fff&size=128`
     };
     
-    console.log('%c✅ User logged in with email', 'color: #16a34a; font-weight: bold;', currentUser.email);
-    
+    console.log('%c✅ User logged in', 'color: #16a34a; font-weight: bold;', currentUser.email);
     showLoading();
     initializeUser();
 }
@@ -135,16 +118,14 @@ function handleSignOut() {
 }
 
 async function initializeUser() {
-    // Check network first
     if (!isOnline()) {
         hideLoading();
-        showToast('⚠️ No internet connection. Please check your network.', 'warning');
+        showToast('⚠️ No internet connection', 'warning');
         return;
     }
     
     console.log('📡 API URL:', API_BASE_URL);
     console.log('👤 User:', currentUser.email);
-    console.log('🌐 Online:', navigator.onLine);
     
     try {
         const r = await apiCall('initUser');
@@ -162,7 +143,6 @@ async function initializeUser() {
             
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            
             document.getElementById('currentYear').textContent = new Date().getFullYear();
             document.getElementById('new-date').valueAsDate = new Date();
             
@@ -172,81 +152,56 @@ async function initializeUser() {
             loadTransactions();
             loadSettings();
             
-            if (r.newUser) {
-                showToast('✅ Welcome! Your personal spreadsheet has been created in your Drive!', 'success');
-            } else {
-                showToast('✅ Welcome back!', 'success');
-            }
+            showToast(r.newUser ? '✅ Welcome! Spreadsheet created in your Drive!' : '✅ Welcome back!', 'success');
         } else {
             showToast('⚠️ ' + (r.error || 'Could not initialize'), 'warning');
         }
     } catch (e) {
         hideLoading();
-        console.error('❌ Initialization error:', e);
-        showToast('❌ Connection error: ' + e.message + '\n\nPlease check your internet and try again.', 'error');
+        console.error('❌ Init error:', e);
+        showToast('❌ ' + e.message + '\n\nCheck your deployment URL in script.js', 'error');
     }
 }
 
 // ════════════════════════════════════════════════════════════
-// API CALLS WITH RETRY LOGIC (MOBILE OPTIMIZED)
+// API CALLS - FETCH API (MOBILE FRIENDLY)
 // ════════════════════════════════════════════════════════════
 
-function apiCall(action, params = {}, retries = 3) {
-    return new Promise((resolve, reject) => {
-        if (!isOnline()) {
-            reject(new Error('No internet connection'));
-            return;
+async function apiCall(action, params = {}) {
+    if (!isOnline()) {
+        throw new Error('No internet connection');
+    }
+    
+    const url = new URL(API_BASE_URL);
+    url.searchParams.set('action', action);
+    url.searchParams.set('_t', Date.now());
+    
+    if (currentUser) {
+        url.searchParams.set('userEmail', currentUser.email);
+    }
+    
+    Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
+    
+    console.log(`📡 Calling: ${action}`);
+    
+    try {
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            redirect: 'follow'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
         
-        const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        const script = document.createElement('script');
-        const timeout = setTimeout(() => { 
-            cleanup(); 
-            if (retries > 0) {
-                console.log(`⚠️ Timeout, retrying ${action}... (${retries} attempts left)`);
-                resolve(apiCall(action, params, retries - 1));
-            } else {
-                reject(new Error('Request timeout. Please check your connection and try again.'));
-            }
-        }, 60000); // 60 seconds for mobile
+        const data = await response.json();
+        console.log(`✅ Response: ${action}`, data);
+        return data;
         
-        window[cb] = (data) => { 
-            clearTimeout(timeout); 
-            cleanup(); 
-            resolve(data); 
-        };
-        
-        function cleanup() { 
-            delete window[cb]; 
-            if (script.parentNode) script.parentNode.removeChild(script); 
-        }
-        
-        const url = new URL(API_BASE_URL);
-        url.searchParams.set('action', action);
-        url.searchParams.set('callback', cb);
-        url.searchParams.set('_t', Date.now());
-        
-        if (currentUser) {
-            url.searchParams.set('userEmail', currentUser.email);
-        }
-        
-        Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
-        
-        script.src = url.toString();
-        script.onerror = () => { 
-            clearTimeout(timeout); 
-            cleanup(); 
-            if (retries > 0) {
-                console.log(`⚠️ Network error on ${action}, retrying... (${retries} attempts left)`);
-                setTimeout(() => {
-                    resolve(apiCall(action, params, retries - 1));
-                }, 2000); // Wait 2 seconds before retry
-            } else {
-                reject(new Error('Network error. Please check your connection.')); 
-            }
-        };
-        document.head.appendChild(script);
-    });
+    } catch (error) {
+        console.error(`❌ API Error (${action}):`, error);
+        throw new Error(`Network error: ${error.message}`);
+    }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -279,7 +234,7 @@ function switchPage(p) {
 }
 
 // ════════════════════════════════════════════════════════════
-// BANKS MANAGEMENT
+// BANKS
 // ════════════════════════════════════════════════════════════
 
 async function loadBanks() {
@@ -331,7 +286,7 @@ async function handleAddBank(e) {
         hideLoading();
         
         if (r.success) {
-            showToast('✅ Bank added successfully!', 'success');
+            showToast('✅ Bank added!', 'success');
             document.getElementById('add-bank-modal').classList.remove('active');
             document.getElementById('add-bank-form').reset();
             await loadBanks();
@@ -346,7 +301,7 @@ async function handleAddBank(e) {
 }
 
 async function deleteBank(bankCode) {
-    if (!confirm(`Delete bank "${bankCode}"?\n\nWarning: This will NOT delete existing transactions, but they will appear as orphaned.`)) return;
+    if (!confirm(`Delete bank "${bankCode}"?`)) return;
     
     showLoading();
     try {
@@ -387,7 +342,7 @@ async function loadDashboard() {
             
             renderDashboard();
         } else {
-            showToast('⚠️ ' + (r.error || 'Failed to load dashboard'), 'warning');
+            showToast('⚠️ ' + (r.error || 'Failed to load'), 'warning');
         }
     } catch (e) {
         hideLoading();
@@ -425,7 +380,7 @@ function createBankSection(bankCode, bank) {
     header.style.color = 'white';
     header.innerHTML = `
         <h2>🏦 ${bank.name.toUpperCase()}</h2>
-        <p>Opening Balance - Expenses = Net Balance</p>
+        <p>Opening - Expenses = Net</p>
     `;
     
     const tiles = document.createElement('div');
@@ -542,7 +497,7 @@ async function handleAddTransaction(e) {
     };
     
     if (!tx.date || isNaN(tx.amount) || tx.amount <= 0 || !tx.bank) {
-        showToast('❌ Fill all fields correctly', 'error');
+        showToast('❌ Fill all fields', 'error');
         return;
     }
     
@@ -552,7 +507,7 @@ async function handleAddTransaction(e) {
         hideLoading();
         
         if (r.success) {
-            showToast(`✅ Transaction added! ID: ${r.id}`, 'success');
+            showToast(`✅ Added! ID: ${r.id}`, 'success');
             document.getElementById('quick-add-form').reset();
             document.getElementById('new-date').valueAsDate = new Date();
             setTimeout(() => { loadTransactions(); loadDashboard(); }, 500);
@@ -593,7 +548,7 @@ async function handleEditTransaction(e) {
         hideLoading();
         
         if (r.success) {
-            showToast('✅ Transaction updated!', 'success');
+            showToast('✅ Updated!', 'success');
             document.getElementById('edit-modal').classList.remove('active');
             setTimeout(() => { loadTransactions(); loadDashboard(); }, 500);
         } else {
@@ -606,7 +561,7 @@ async function handleEditTransaction(e) {
 }
 
 async function deleteTransaction(id) {
-    if (!confirm('Delete this transaction?')) return;
+    if (!confirm('Delete?')) return;
     
     showLoading();
     try {
@@ -614,7 +569,7 @@ async function deleteTransaction(id) {
         hideLoading();
         
         if (r.success) {
-            showToast('✅ Transaction deleted', 'success');
+            showToast('✅ Deleted', 'success');
             setTimeout(() => { loadTransactions(); loadDashboard(); }, 500);
         }
     } catch (e) {
@@ -630,13 +585,10 @@ async function deleteTransaction(id) {
 async function loadSettings() {
     try {
         await loadBanks();
-        
         const r = await apiCall('getSettings');
-        
         if (r.success && r.data) {
             document.getElementById('salary-input').value = r.data.salary_amount || 0;
         }
-        
         renderBankSettings();
     } catch (e) {
         console.log('Settings load error:', e);
@@ -649,7 +601,7 @@ function renderBankSettings() {
         <div class="bank-settings-group">
             <h3 style="color: ${bank.color}; margin-bottom: 1rem;">
                 🏦 ${bank.name}
-                <button class="btn btn-danger" onclick="deleteBank('${bank.code}')" style="float: right; font-size: 0.8rem; padding: 0.4rem 0.8rem;">Delete Bank</button>
+                <button class="btn btn-danger" onclick="deleteBank('${bank.code}')" style="float: right; font-size: 0.8rem; padding: 0.4rem 0.8rem;">Delete</button>
             </h3>
             <div class="form-group">
                 <label for="opening-${bank.code}">Opening Balance</label>
@@ -664,26 +616,21 @@ async function handleSaveSettings(e) {
     showLoading();
     
     try {
-        const params = {
-            salary_amount: document.getElementById('salary-input').value
-        };
+        const params = { salary_amount: document.getElementById('salary-input').value };
         
         userBanks.forEach(bank => {
             const input = document.getElementById(`opening-${bank.code}`);
-            if (input) {
-                params[`opening_balance_${bank.code}`] = input.value;
-            }
+            if (input) params[`opening_balance_${bank.code}`] = input.value;
         });
         
         const r = await apiCall('updateSettings', params);
-        
         hideLoading();
         
         if (r.success) {
-            showToast('✅ Settings saved!', 'success');
+            showToast('✅ Saved!', 'success');
             setTimeout(() => loadDashboard(), 500);
         } else {
-            showToast('❌ ' + (r.error || 'Failed to save'), 'error');
+            showToast('❌ ' + r.error, 'error');
         }
     } catch (e) {
         hideLoading();
@@ -692,7 +639,7 @@ async function handleSaveSettings(e) {
 }
 
 async function handleRollover() {
-    if (!confirm('📅 Rollover to next month?\n\nThis will set Opening balances to current Net balances.')) return;
+    if (!confirm('📅 Rollover to next month?')) return;
     
     showLoading();
     try {
@@ -700,17 +647,15 @@ async function handleRollover() {
         hideLoading();
         
         if (r.success) {
-            let message = '✅ Month rolled over!\n\n';
+            let msg = '✅ Rolled over!\n\n';
             Object.keys(r.newBalances).forEach(code => {
                 const bank = userBanks.find(b => b.code === code);
-                if (bank) {
-                    message += `${bank.name}: ₹${r.newBalances[code].toFixed(2)}\n`;
-                }
+                if (bank) msg += `${bank.name}: ₹${r.newBalances[code].toFixed(2)}\n`;
             });
-            showToast(message, 'success');
+            showToast(msg, 'success');
             setTimeout(() => { loadSettings(); loadDashboard(); }, 1000);
         } else {
-            showToast('❌ ' + (r.error || 'Rollover failed'), 'error');
+            showToast('❌ ' + r.error, 'error');
         }
     } catch (e) {
         hideLoading();
@@ -732,11 +677,11 @@ async function handleExport() {
             a.download = `balance_sheet_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast('✅ Exported successfully!', 'success');
+            showToast('✅ Exported!', 'success');
         }
     } catch (e) {
         hideLoading();
-        showToast('❌ Export failed', 'error');
+        showToast('❌ Failed', 'error');
     }
 }
 
@@ -749,11 +694,8 @@ function formatCurrency(v) {
 }
 
 function formatDateTime(iso) { 
-    try { 
-        return new Date(iso).toLocaleString('en-IN'); 
-    } catch(e) { 
-        return iso; 
-    } 
+    try { return new Date(iso).toLocaleString('en-IN'); } 
+    catch(e) { return iso; } 
 }
 
 function escapeHtml(t) { 
@@ -763,12 +705,7 @@ function escapeHtml(t) {
 }
 
 function showLoading() { 
-    const overlay = document.getElementById('loading-overlay');
-    const text = overlay.querySelector('p');
-    if (text) {
-        text.textContent = 'Loading... Please wait';
-    }
-    overlay.classList.add('active'); 
+    document.getElementById('loading-overlay').classList.add('active'); 
 }
 
 function hideLoading() { 
@@ -779,11 +716,11 @@ function showToast(m, t='info') {
     const toast = document.getElementById('toast'); 
     toast.textContent = m; 
     toast.className = `toast ${t} active`; 
-    setTimeout(() => toast.classList.remove('active'), 5000); // 5 seconds for mobile
+    setTimeout(() => toast.classList.remove('active'), 5000);
 }
 
 // ════════════════════════════════════════════════════════════
-// GLOBAL FUNCTIONS & INITIALIZATION
+// GLOBAL FUNCTIONS
 // ════════════════════════════════════════════════════════════
 
 window.editTransaction = editTransaction;
@@ -792,17 +729,5 @@ window.deleteBank = deleteBank;
 window.handleCredentialResponse = handleCredentialResponse;
 window.handleSimpleLogin = handleSimpleLogin;
 
-// Styled console output
-console.log(
-    '%c💰 Balance Sheet Manager%c v4.2 MOBILE',
-    'color: #2563eb; font-size: 20px; font-weight: bold;',
-    'color: #64748b; font-size: 12px; font-weight: normal;'
-);
-console.log(
-    '%c✅ System Ready | %c🔐 Auth Enabled | %c📊 Multi-Bank | %c☁️ User Drive | %c📱 Mobile Fix',
-    'color: #16a34a; font-weight: bold;',
-    'color: #f59e0b; font-weight: bold;',
-    'color: #2563eb; font-weight: bold;',
-    'color: #7c3aed; font-weight: bold;',
-    'color: #ec4899; font-weight: bold;'
-);
+console.log('%c💰 Balance Sheet v4.3', 'color: #2563eb; font-size: 18px; font-weight: bold;');
+console.log('%c✅ Mobile Fix | Fetch API', 'color: #16a34a; font-weight: bold;');
