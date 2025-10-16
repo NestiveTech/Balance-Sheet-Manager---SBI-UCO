@@ -1,9 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// MULTI-USER BALANCE SHEET - FRONTEND
-// Each user gets their own spreadsheet
+// OPTION 2: USER CREATES THEIR OWN SPREADSHEET
 // ═══════════════════════════════════════════════════════════════════════════
 
-// REPLACE WITH YOUR APPS SCRIPT URL
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyEg5rdUs9X9UGC6vUg18Mxgvld7rG17JdG3BhOr72tDMAkrljcIoj2ALAwaFWx-nD2/exec';
 
 let transactions = [];
@@ -35,7 +33,7 @@ function handleCredentialResponse(response) {
     document.getElementById('app-screen').style.display = 'block';
     
     showLoading();
-    initializeUser();
+    checkUserSetup();
 }
 
 function parseJwt(token) {
@@ -58,38 +56,99 @@ function handleSignOut() {
     }
 }
 
-async function initializeUser() {
+async function checkUserSetup() {
     try {
-        const r = await apiCall('initUser');
+        const r = await apiCall('checkUser');
         hideLoading();
         
         if (r.success) {
+            if (r.hasSpreadsheet) {
+                // User already has spreadsheet
+                document.getElementById('setup-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                
+                if (r.sheetUrl) {
+                    document.getElementById('sheet-link').href = r.sheetUrl;
+                    document.getElementById('sheet-link').style.display = 'inline-flex';
+                }
+                
+                initializeApp();
+                showToast('✅ Welcome back!', 'success');
+            } else {
+                // Show setup screen
+                showSetupScreen();
+            }
+        } else {
+            showToast('❌ ' + r.error, 'error');
+        }
+    } catch (e) {
+        hideLoading();
+        console.error('Check error:', e);
+        showToast('❌ ' + e.message, 'error');
+    }
+}
+
+function showSetupScreen() {
+    document.getElementById('setup-screen').style.display = 'flex';
+    document.getElementById('main-app').style.display = 'none';
+}
+
+async function handleSetupSubmit() {
+    const sheetUrl = document.getElementById('sheet-url-input').value.trim();
+    
+    if (!sheetUrl) {
+        showToast('❌ Please enter a spreadsheet URL', 'error');
+        return;
+    }
+    
+    showLoading();
+    try {
+        const r = await apiCall('registerSheet', { sheetUrl });
+        hideLoading();
+        
+        if (r.success) {
+            showToast('✅ Spreadsheet registered successfully!', 'success');
+            
             if (r.sheetUrl) {
                 document.getElementById('sheet-link').href = r.sheetUrl;
                 document.getElementById('sheet-link').style.display = 'inline-flex';
             }
             
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-            document.getElementById('new-date').valueAsDate = new Date();
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
             
-            setupListeners();
-            await loadBanks();
-            loadDashboard();
-            loadTransactions();
-            loadSettings();
-            
-            if (r.newUser) {
-                showToast('✅ Welcome! Your personal spreadsheet has been created in your Drive!', 'success');
-            } else {
-                showToast('✅ Welcome back!', 'success');
-            }
+            initializeApp();
         } else {
-            showToast('⚠️ ' + (r.error || 'Could not initialize'), 'warning');
+            showToast('❌ ' + r.error, 'error');
         }
     } catch (e) {
         hideLoading();
-        console.error('❌ Init error:', e);
-        showToast('❌ Connection error: ' + e.message, 'error');
+        showToast('❌ ' + e.message, 'error');
+    }
+}
+
+function copyAppEmail() {
+    const email = document.getElementById('app-email').textContent;
+    navigator.clipboard.writeText(email).then(() => {
+        showToast('✅ Email copied to clipboard!', 'success');
+    }).catch(() => {
+        showToast('⚠️ Could not copy. Please copy manually.', 'warning');
+    });
+}
+
+async function initializeApp() {
+    try {
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        document.getElementById('new-date').valueAsDate = new Date();
+        
+        setupListeners();
+        await loadBanks();
+        loadDashboard();
+        loadTransactions();
+        loadSettings();
+    } catch (e) {
+        console.error('Init error:', e);
+        showToast('❌ ' + e.message, 'error');
     }
 }
 
@@ -365,7 +424,7 @@ function adjustColor(color, amount) {
 }
 
 // ════════════════════════════════════════════════════════════
-// TRANSACTIONS
+// TRANSACTIONS (Same as before - keeping for completeness)
 // ════════════════════════════════════════════════════════════
 
 async function loadTransactions() {
@@ -683,7 +742,7 @@ function showToast(m, t='info') {
 }
 
 // ════════════════════════════════════════════════════════════
-// GLOBAL FUNCTIONS
+// GLOBAL FUNCTIONS & INITIALIZATION
 // ════════════════════════════════════════════════════════════
 
 window.editTransaction = editTransaction;
@@ -691,21 +750,14 @@ window.deleteTransaction = deleteTransaction;
 window.deleteBank = deleteBank;
 window.handleCredentialResponse = handleCredentialResponse;
 window.handleSignOut = handleSignOut;
-
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('authYear').textContent = new Date().getFullYear();
-    console.log('%c💰 Multi-User Balance Sheet', 'color: #2563eb; font-size: 18px; font-weight: bold;');
-    console.log('%c✅ Separate Spreadsheet Per User', 'color: #16a34a; font-weight: bold;');
-});
-
-
-// Add to global functions section
 window.handleSetupSubmit = handleSetupSubmit;
 window.copyAppEmail = copyAppEmail;
 
-// Load app email on page load
 document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('authYear').textContent = new Date().getFullYear();
+    
+    console.log('%c💰 Balance Sheet Manager - Option 2', 'color: #2563eb; font-size: 18px; font-weight: bold;');
+    console.log('%c✅ User Creates Their Own Spreadsheet', 'color: #16a34a; font-weight: bold;');
     
     // Load app email for setup screen
     try {
@@ -713,8 +765,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await r.json();
         if (data.appEmail) {
             document.getElementById('app-email').textContent = data.appEmail;
+            console.log('%c📧 App Email:', 'color: #2563eb; font-weight: bold;', data.appEmail);
         }
     } catch (e) {
-        console.log('Could not load app email');
+        console.log('Could not load app email:', e);
+        document.getElementById('app-email').textContent = 'Unable to load email';
     }
 });
