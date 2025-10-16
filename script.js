@@ -697,3 +697,24 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('%c💰 Multi-User Balance Sheet', 'color: #2563eb; font-size: 18px; font-weight: bold;');
     console.log('%c✅ Separate Spreadsheet Per User', 'color: #16a34a; font-weight: bold;');
 });
+
+
+// Add to global functions section
+window.handleSetupSubmit = handleSetupSubmit;
+window.copyAppEmail = copyAppEmail;
+
+// Load app email on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('authYear').textContent = new Date().getFullYear();
+    
+    // Load app email for setup screen
+    try {
+        const r = await fetch(API_BASE_URL + '?action=ping&_t=' + Date.now());
+        const data = await r.json();
+        if (data.appEmail) {
+            document.getElementById('app-email').textContent = data.appEmail;
+        }
+    } catch (e) {
+        console.log('Could not load app email');
+    }
+});

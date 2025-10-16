@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- AUTH SCREEN -->
+    <!-- AUTH SCREEN (Login) -->
     <div id="auth-screen" class="auth-screen">
         <div class="auth-container">
             <div class="auth-header">
@@ -53,164 +53,219 @@
         </div>
     </div>
 
-    <!-- APP SCREEN -->
+    <!-- APP SCREEN (After Login) -->
     <div id="app-screen" style="display: none;">
-        <header class="header">
-            <div class="container">
-                <div class="header-content">
-                    <div>
-                        <h1 class="header-title">BALANCE SHEET — <span id="currentYear"></span></h1>
-                        <p class="header-subtitle">Previous + Input = Opening</p>
-                    </div>
-                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                        <div class="user-info">
-                            <img id="user-avatar" src="" alt="User" class="user-avatar">
-                            <div>
-                                <div id="user-name" style="font-weight: 600;">User</div>
-                                <div id="user-email" style="font-size: 0.85rem; opacity: 0.9;">email@example.com</div>
+        <!-- SETUP SCREEN (First-time users) -->
+        <div id="setup-screen" style="display: none;">
+            <div class="setup-container">
+                <div class="setup-card">
+                    <h1 style="text-align: center; color: #2563eb; margin-bottom: 1rem;">🎉 Welcome to Balance Sheet Manager!</h1>
+                    <p style="text-align: center; color: #64748b; margin-bottom: 2rem;">
+                        Let's set up your personal spreadsheet in YOUR Google Drive
+                    </p>
+                    
+                    <div class="setup-steps">
+                        <div class="setup-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Create a Google Sheet</h3>
+                                <p>Open Google Drive and create a new Google Sheet</p>
+                                <a href="https://sheets.new" target="_blank" class="btn btn-primary" style="display: inline-flex; margin-top: 0.5rem;">
+                                    📄 Create New Sheet
+                                </a>
                             </div>
                         </div>
-                        <button onclick="handleSignOut()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Sign Out</button>
-                        <a href="#" class="spreadsheet-link" id="sheet-link" target="_blank" style="display: none;">
-                            📊 Open Spreadsheet
-                        </a>
+                        
+                        <div class="setup-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Share with the App</h3>
+                                <p>Click "Share" in your spreadsheet and add this email as <strong>Editor</strong>:</p>
+                                <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin: 1rem 0; display: flex; align-items: center; gap: 1rem;">
+                                    <code id="app-email" style="flex: 1; font-size: 0.95rem; color: #2563eb;">Loading...</code>
+                                    <button onclick="copyAppEmail()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Copy</button>
+                                </div>
+                                <small style="color: #64748b;">⚠️ Make sure to give <strong>Editor</strong> access, not just Viewer</small>
+                            </div>
+                        </div>
+                        
+                        <div class="setup-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Enter Spreadsheet URL</h3>
+                                <p>Copy the URL from your browser and paste it below:</p>
+                                <div class="form-group" style="margin-top: 1rem;">
+                                    <input type="text" id="sheet-url-input" placeholder="https://docs.google.com/spreadsheets/d/..." style="width: 100%;">
+                                </div>
+                                <button onclick="handleSetupSubmit()" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                                    ✅ Register My Spreadsheet
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </header>
+        </div>
 
-        <nav class="nav">
-            <div class="container">
-                <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
-                <button class="nav-btn" data-page="transactions">💳 Transactions</button>
-                <button class="nav-btn" data-page="settings">⚙️ Settings</button>
-            </div>
-        </nav>
-
-        <main class="container">
-            <!-- DASHBOARD PAGE -->
-            <div id="dashboard-page" class="page active">
-                <div class="section-header salary-header">
-                    <h2>💰 SALARY INFORMATION</h2>
-                    <p>Salary stored for reference only</p>
-                </div>
-                <div class="dashboard-section salary-section">
-                    <div class="tile tile-neutral tile-large">
-                        <div class="tile-icon">💰</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Monthly Salary</div>
-                            <div class="tile-value" id="salary-value">₹0.00</div>
+        <!-- MAIN APP (Existing users) -->
+        <div id="main-app" style="display: none;">
+            <header class="header">
+                <div class="container">
+                    <div class="header-content">
+                        <div>
+                            <h1 class="header-title">BALANCE SHEET — <span id="currentYear"></span></h1>
+                            <p class="header-subtitle">Previous + Input = Opening</p>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                            <div class="user-info">
+                                <img id="user-avatar" src="" alt="User" class="user-avatar">
+                                <div>
+                                    <div id="user-name" style="font-weight: 600;">User</div>
+                                    <div id="user-email" style="font-size: 0.85rem; opacity: 0.9;">email@example.com</div>
+                                </div>
+                            </div>
+                            <button onclick="handleSignOut()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Sign Out</button>
+                            <a href="#" class="spreadsheet-link" id="sheet-link" target="_blank" style="display: none;">
+                                📊 Open Spreadsheet
+                            </a>
                         </div>
                     </div>
                 </div>
+            </header>
 
-                <div id="banks-container"></div>
-
-                <div class="section-header combined-header">
-                    <h2>📊 COMBINED TOTALS</h2>
-                    <p>All Banks Combined Overview</p>
+            <nav class="nav">
+                <div class="container">
+                    <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+                    <button class="nav-btn" data-page="transactions">💳 Transactions</button>
+                    <button class="nav-btn" data-page="settings">⚙️ Settings</button>
                 </div>
-                <div class="dashboard-section combined-section">
-                    <div class="tile tile-combined tile-highlight">
-                        <div class="tile-icon">🏦</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Combined Opening</div>
-                            <div class="tile-value" id="combined-opening">₹0.00</div>
+            </nav>
+
+            <main class="container">
+                <!-- DASHBOARD PAGE -->
+                <div id="dashboard-page" class="page active">
+                    <div class="section-header salary-header">
+                        <h2>💰 SALARY INFORMATION</h2>
+                        <p>Salary stored for reference only</p>
+                    </div>
+                    <div class="dashboard-section salary-section">
+                        <div class="tile tile-neutral tile-large">
+                            <div class="tile-icon">💰</div>
+                            <div class="tile-content">
+                                <div class="tile-label">Monthly Salary</div>
+                                <div class="tile-value" id="salary-value">₹0.00</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="tile tile-combined">
-                        <div class="tile-icon">💸</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Combined Expenses</div>
-                            <div class="tile-value tile-value-danger" id="combined-expenses">₹0.00</div>
+
+                    <div id="banks-container"></div>
+
+                    <div class="section-header combined-header">
+                        <h2>📊 COMBINED TOTALS</h2>
+                        <p>All Banks Combined Overview</p>
+                    </div>
+                    <div class="dashboard-section combined-section">
+                        <div class="tile tile-combined tile-highlight">
+                            <div class="tile-icon">🏦</div>
+                            <div class="tile-content">
+                                <div class="tile-label">Combined Opening</div>
+                                <div class="tile-value" id="combined-opening">₹0.00</div>
+                            </div>
+                        </div>
+                        <div class="tile tile-combined">
+                            <div class="tile-icon">💸</div>
+                            <div class="tile-content">
+                                <div class="tile-label">Combined Expenses</div>
+                                <div class="tile-value tile-value-danger" id="combined-expenses">₹0.00</div>
+                            </div>
+                        </div>
+                        <div class="tile tile-combined tile-highlight">
+                            <div class="tile-icon">✅</div>
+                            <div class="tile-content">
+                                <div class="tile-label">Combined Net</div>
+                                <div class="tile-value tile-value-success" id="combined-net">₹0.00</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="tile tile-combined tile-highlight">
-                        <div class="tile-icon">✅</div>
-                        <div class="tile-content">
-                            <div class="tile-label">Combined Net</div>
-                            <div class="tile-value tile-value-success" id="combined-net">₹0.00</div>
+
+                    <div class="timestamp">⏰ Last Updated: <span id="last-updated">Never</span></div>
+                </div>
+
+                <!-- TRANSACTIONS PAGE -->
+                <div id="transactions-page" class="page">
+                    <div class="card">
+                        <h2>➕ Add New Transaction</h2>
+                        <form id="quick-add-form" class="quick-add-form">
+                            <input type="date" id="new-date" required>
+                            <input type="text" id="new-description" placeholder="Description" required>
+                            <input type="number" id="new-amount" placeholder="Amount" step="0.01" min="0.01" required>
+                            <select id="new-bank" required>
+                                <option value="">Select Bank</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Add Transaction</button>
+                        </form>
+                    </div>
+                    
+                    <div class="summary-strip">
+                        <div class="summary-item">
+                            <span class="summary-label">Total Expenses:</span>
+                            <span class="summary-value" id="total-expenses">₹0.00</span>
                         </div>
+                        <div id="bank-summary"></div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Sl No.</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Bank</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-tbody">
+                                <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="timestamp">⏰ Last Updated: <span id="last-updated">Never</span></div>
-            </div>
+                <!-- SETTINGS PAGE -->
+                <div id="settings-page" class="page">
+                    <div class="card">
+                        <h2>⚙️ Financial Settings</h2>
+                        <form id="settings-form" class="settings-form">
+                            <div class="form-group">
+                                <label for="salary-input">💰 Monthly Salary</label>
+                                <input type="number" id="salary-input" step="0.01" min="0" required>
+                                <small style="color: #64748b;">Stored for reference only</small>
+                            </div>
 
-            <!-- TRANSACTIONS PAGE -->
-            <div id="transactions-page" class="page">
-                <div class="card">
-                    <h2>➕ Add New Transaction</h2>
-                    <form id="quick-add-form" class="quick-add-form">
-                        <input type="date" id="new-date" required>
-                        <input type="text" id="new-description" placeholder="Description" required>
-                        <input type="number" id="new-amount" placeholder="Amount" step="0.01" min="0.01" required>
-                        <select id="new-bank" required>
-                            <option value="">Select Bank</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary">Add Transaction</button>
-                    </form>
-                </div>
-                
-                <div class="summary-strip">
-                    <div class="summary-item">
-                        <span class="summary-label">Total Expenses:</span>
-                        <span class="summary-value" id="total-expenses">₹0.00</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem 0;">
+                                <h3 style="margin: 0;">🏦 Your Banks</h3>
+                                <button type="button" class="btn btn-primary" id="add-bank-btn">➕ Add Bank</button>
+                            </div>
+
+                            <div id="banks-settings"></div>
+
+                            <div class="button-group" style="margin-top: 2rem;">
+                                <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+                                <button type="button" class="btn btn-secondary" id="recalculate-btn">🔄 Recalculate</button>
+                                <button type="button" class="btn" id="rollover-btn" style="background: #f59e0b; color: white;">📅 Rollover Month</button>
+                            </div>
+                        </form>
                     </div>
-                    <div id="bank-summary"></div>
+
+                    <div class="card">
+                        <h2>📤 Export</h2>
+                        <button class="btn btn-secondary" id="export-btn">📤 Export to CSV</button>
+                    </div>
                 </div>
-                
-                <div class="table-container">
-                    <table class="transactions-table">
-                        <thead>
-                            <tr>
-                                <th>Sl No.</th>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Bank</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactions-tbody">
-                            <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- SETTINGS PAGE -->
-            <div id="settings-page" class="page">
-                <div class="card">
-                    <h2>⚙️ Financial Settings</h2>
-                    <form id="settings-form" class="settings-form">
-                        <div class="form-group">
-                            <label for="salary-input">💰 Monthly Salary</label>
-                            <input type="number" id="salary-input" step="0.01" min="0" required>
-                            <small style="color: #64748b;">Stored for reference only</small>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem 0;">
-                            <h3 style="margin: 0;">🏦 Your Banks</h3>
-                            <button type="button" class="btn btn-primary" id="add-bank-btn">➕ Add Bank</button>
-                        </div>
-
-                        <div id="banks-settings"></div>
-
-                        <div class="button-group" style="margin-top: 2rem;">
-                            <button type="submit" class="btn btn-primary">💾 Save Settings</button>
-                            <button type="button" class="btn btn-secondary" id="recalculate-btn">🔄 Recalculate</button>
-                            <button type="button" class="btn" id="rollover-btn" style="background: #f59e0b; color: white;">📅 Rollover Month</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="card">
-                    <h2>📤 Export</h2>
-                    <button class="btn btn-secondary" id="export-btn">📤 Export to CSV</button>
-                </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <!-- Edit Modal -->
