@@ -1,44 +1,95 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// BALANCE SHEET MANAGER - FINAL VERSION
-// Previous Balance + Monthly Input = Opening Balance
+// MULTI-USER BALANCE SHEET - FRONTEND
+// Each user gets their own spreadsheet
 // ═══════════════════════════════════════════════════════════════════════════
 
-// REPLACE THIS WITH YOUR APPS SCRIPT DEPLOYMENT URL
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyx_-e021gityKuGttbyH8i-cDfLnmSJM1RgaLyFhVLQC0K2_O-Bt3n_DukMYvxScQyDQ/exec';
-
+// REPLACE WITH YOUR APPS SCRIPT URL
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyEg5rdUs9X9UGC6vUg18Mxgvld7rG17JdG3BhOr72tDMAkrljcIoj2ALAwaFWx-nD2/exec';
 
 let transactions = [];
 let dashboardData = {};
+let currentUser = null;
 let userBanks = [];
 
 // ════════════════════════════════════════════════════════════
-// INITIALIZATION
+// GOOGLE AUTHENTICATION
 // ════════════════════════════════════════════════════════════
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('%c💰 Balance Sheet Manager', 'color: #2563eb; font-size: 20px; font-weight: bold;');
-    console.log('%c✅ Previous + Input Logic', 'color: #16a34a; font-weight: bold;');
+function handleCredentialResponse(response) {
+    const credential = response.credential;
+    const payload = parseJwt(credential);
     
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-    document.getElementById('new-date').valueAsDate = new Date();
+    currentUser = {
+        email: payload.email,
+        name: payload.name,
+        picture: payload.picture
+    };
     
-    setupListeners();
-    initialize();
-});
-
-async function initialize() {
+    console.log('%c✅ User authenticated', 'color: #16a34a; font-weight: bold;', currentUser.email);
+    
+    document.getElementById('user-name').textContent = currentUser.name;
+    document.getElementById('user-email').textContent = currentUser.email;
+    document.getElementById('user-avatar').src = currentUser.picture;
+    
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    
     showLoading();
+    initializeUser();
+}
+
+function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+}
+
+function handleSignOut() {
+    if (confirm('Are you sure you want to sign out?')) {
+        google.accounts.id.disableAutoSelect();
+        document.getElementById('app-screen').style.display = 'none';
+        document.getElementById('auth-screen').style.display = 'flex';
+        currentUser = null;
+        userBanks = [];
+        showToast('👋 Signed out successfully', 'success');
+    }
+}
+
+async function initializeUser() {
     try {
-        await loadBanks();
-        await loadDashboard();
-        await loadTransactions();
-        await loadSettings();
+        const r = await apiCall('initUser');
         hideLoading();
-        showToast('✅ System loaded successfully!', 'success');
+        
+        if (r.success) {
+            if (r.sheetUrl) {
+                document.getElementById('sheet-link').href = r.sheetUrl;
+                document.getElementById('sheet-link').style.display = 'inline-flex';
+            }
+            
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            document.getElementById('new-date').valueAsDate = new Date();
+            
+            setupListeners();
+            await loadBanks();
+            loadDashboard();
+            loadTransactions();
+            loadSettings();
+            
+            if (r.newUser) {
+                showToast('✅ Welcome! Your personal spreadsheet has been created in your Drive!', 'success');
+            } else {
+                showToast('✅ Welcome back!', 'success');
+            }
+        } else {
+            showToast('⚠️ ' + (r.error || 'Could not initialize'), 'warning');
+        }
     } catch (e) {
         hideLoading();
-        console.error('❌ Initialization error:', e);
-        showToast('❌ ' + e.message + '\n\nCheck your API_BASE_URL', 'error');
+        console.error('❌ Init error:', e);
+        showToast('❌ Connection error: ' + e.message, 'error');
     }
 }
 
@@ -50,6 +101,10 @@ async function apiCall(action, params = {}) {
     const url = new URL(API_BASE_URL);
     url.searchParams.set('action', action);
     url.searchParams.set('_t', Date.now());
+    
+    if (currentUser) {
+        url.searchParams.set('userEmail', currentUser.email);
+    }
     
     Object.keys(params).forEach(k => url.searchParams.set(k, params[k]));
     
@@ -103,6 +158,7 @@ function switchPage(p) {
     else if (p === 'transactions') loadTransactions();
     else if (p === 'settings') { loadSettings(); loadBanks(); }
 }
+
 // ════════════════════════════════════════════════════════════
 // BANKS
 // ════════════════════════════════════════════════════════════
@@ -193,7 +249,7 @@ async function deleteBank(bankCode) {
 }
 
 // ════════════════════════════════════════════════════════════
-// DASHBOARD - PREVIOUS + INPUT LOGIC
+// DASHBOARD
 // ════════════════════════════════════════════════════════════
 
 async function loadDashboard() {
@@ -255,7 +311,6 @@ function createBankSection(bankCode, bank) {
     const tiles = document.createElement('div');
     tiles.className = 'dashboard-section';
     
-    // Show all 5 tiles: Previous, Input, Opening, Expenses, Net
     let tilesHTML = `
         <div class="tile" style="border-left-color: ${bank.color};">
             <div class="tile-icon">📅</div>
@@ -464,8 +519,9 @@ async function deleteTransaction(id) {
         showToast('❌ ' + e.message, 'error');
     }
 }
+
 // ════════════════════════════════════════════════════════════
-// SETTINGS - PREVIOUS + INPUT LOGIC
+// SETTINGS
 // ════════════════════════════════════════════════════════════
 
 async function loadSettings() {
@@ -524,7 +580,6 @@ async function handleSaveSettings(e) {
     try {
         const params = { salary_amount: document.getElementById('salary-input').value };
         
-        // ✅ Save MONTHLY INPUTS (previous balances are auto-updated on rollover)
         userBanks.forEach(bank => {
             const input = document.getElementById(`input-${bank.code}`);
             if (input) params[`monthly_input_${bank.code}`] = input.value;
@@ -554,8 +609,7 @@ async function handleRollover() {
         hideLoading();
         
         if (r.success) {
-            let msg = '✅ Month rolled over successfully!\n\n';
-            msg += '📅 New Previous Balances:\n';
+            let msg = '✅ Month rolled over successfully!\n\n📅 New Previous Balances:\n';
             Object.keys(r.newPreviousBalances).forEach(code => {
                 const bank = userBanks.find(b => b.code === code);
                 if (bank) msg += `  ${bank.name}: ₹${r.newPreviousBalances[code].toFixed(2)}\n`;
@@ -635,6 +689,11 @@ function showToast(m, t='info') {
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;
 window.deleteBank = deleteBank;
+window.handleCredentialResponse = handleCredentialResponse;
+window.handleSignOut = handleSignOut;
 
-console.log('%c✅ Ready!', 'color: #16a34a; font-size: 14px; font-weight: bold;');
-console.log('%cFormula: Opening = Previous + Input', 'color: #2563eb; font-size: 12px;');
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('authYear').textContent = new Date().getFullYear();
+    console.log('%c💰 Multi-User Balance Sheet', 'color: #2563eb; font-size: 18px; font-weight: bold;');
+    console.log('%c✅ Separate Spreadsheet Per User', 'color: #16a34a; font-weight: bold;');
+});
