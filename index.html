@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Balance Sheet Manager - Multi-User</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <!-- Auth Screen -->
@@ -16,21 +15,30 @@
             <p class="auth-subtitle">SBI / UCO Bank Manager • Multi-User System</p>
             <p class="auth-description">Each user gets their own Google Spreadsheet</p>
             
-            <div id="g_id_onload"
-                 data-client_id="213013984719-bgrl6bil62nmt2b66d03tnq7ms0rage7.apps.googleusercontent.com"
-                 data-callback="handleCredentialResponse"
-                 data-auto_prompt="false">
-            </div>
+            <!-- Simple Login Form (No OAuth Issues) -->
+            <form onsubmit="handleSimpleLogin(event)" style="margin-top: 2rem;">
+                <div style="margin-bottom: 1rem;">
+                    <input type="text" 
+                           id="login-name" 
+                           placeholder="Your Name" 
+                           required
+                           style="width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <input type="email" 
+                           id="login-email" 
+                           placeholder="Your Email" 
+                           required
+                           style="width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                    🚀 Get Started
+                </button>
+            </form>
             
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-size="large"
-                 data-theme="outline"
-                 data-text="sign_in_with"
-                 data-shape="rectangular"
-                 data-logo_alignment="left"
-                 data-width="350">
-            </div>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: #64748b;">
+                Your data is stored securely in Google Sheets
+            </p>
         </div>
     </div>
 
@@ -45,7 +53,6 @@
                     </div>
                     <div class="user-info-container">
                         <div class="user-info">
-                            <img id="user-avatar" class="user-avatar" src="" alt="User">
                             <div class="user-details">
                                 <div class="user-name" id="user-name">User Name</div>
                                 <div class="user-email" id="user-email">user@example.com</div>
