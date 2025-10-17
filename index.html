@@ -22,7 +22,7 @@
                 </p>
                 
                 <div id="g_id_onload"
-                     data-client_id="213013984719-bgrl6bil62nmt2b66d03tnq7ms0rage7.apps.googleusercontent.com"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
                      data-callback="handleCredentialResponse"
                      data-auto_prompt="false">
                 </div>
@@ -99,7 +99,7 @@
                             <h1 class="header-title">BALANCE SHEET — <span id="currentYear"></span></h1>
                             <p class="header-subtitle">Previous + Input = Opening</p>
                         </div>
-                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <div class="desktop-user-section">
                             <div class="user-info">
                                 <img id="user-avatar" src="" alt="User" class="user-avatar">
                                 <div>
@@ -118,9 +118,33 @@
 
             <nav class="nav">
                 <div class="container">
-                    <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
-                    <button class="nav-btn" data-page="transactions">💳 Transactions</button>
-                    <button class="nav-btn" data-page="settings">⚙️ Settings</button>
+                    <!-- Hamburger Button (Mobile/Tablet Only) -->
+                    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    
+                    <!-- Navigation Buttons -->
+                    <div class="nav-links" id="nav-links">
+                        <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+                        <button class="nav-btn" data-page="transactions">💳 Transactions</button>
+                        <button class="nav-btn" data-page="settings">⚙️ Settings</button>
+                        
+                        <!-- Mobile Menu Items (visible only on mobile) -->
+                        <div class="mobile-menu-items">
+                            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0.5rem 0;">
+                            <a href="#" class="mobile-sheet-link" id="mobile-sheet-link" target="_blank" style="display: none;">
+                                📊 Open Spreadsheet
+                            </a>
+                            <button onclick="handleSignOut()" class="mobile-signout-btn">
+                                🚪 Sign Out
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Overlay for mobile menu -->
+                    <div class="nav-overlay" id="nav-overlay" onclick="toggleMobileMenu()"></div>
                 </div>
             </nav>
 

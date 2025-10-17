@@ -1,6 +1,6 @@
 /**
- * BALANCE SHEET MANAGER - COMPLETE RESPONSIVE BLUE THEME
- * Auto-Create + One-Time Previous Balance Lock
+ * BALANCE SHEET MANAGER - COMPLETE WITH HAMBURGER MENU
+ * Auto-Create + Auto Previous Balance + Robust Rollover + Mobile Navigation
  * Mobile + Tablet + Desktop Optimized
  */
 
@@ -159,6 +159,13 @@ body {
     font-weight: 300;
 }
 
+.desktop-user-section {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 .user-info {
     display: flex;
     align-items: center;
@@ -200,7 +207,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   NAVIGATION
+   NAVIGATION WITH HAMBURGER MENU
    ═══════════════════════════════════════════════════════════ */
 
 .nav {
@@ -218,6 +225,7 @@ body {
     padding: 0.75rem 1rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    position: relative;
 }
 
 .nav-btn {
@@ -243,6 +251,100 @@ body {
     background: var(--color-primary);
     color: white;
     box-shadow: var(--shadow-md);
+}
+
+/* Hamburger Button */
+.hamburger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 102;
+}
+
+.hamburger-btn span {
+    width: 100%;
+    height: 3px;
+    background: var(--color-primary);
+    border-radius: 10px;
+    transition: var(--transition);
+}
+
+.hamburger-btn.active span:nth-child(1) {
+    transform: translateY(10px) rotate(45deg);
+}
+
+.hamburger-btn.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-btn.active span:nth-child(3) {
+    transform: translateY(-10px) rotate(-45deg);
+}
+
+.nav-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 98;
+}
+
+.nav-overlay.active {
+    display: block;
+}
+
+.mobile-menu-items {
+    display: none;
+}
+
+.mobile-sheet-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    background: transparent;
+    color: var(--color-primary);
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    transition: var(--transition);
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+.mobile-sheet-link:hover {
+    background: var(--color-bg);
+}
+
+.mobile-signout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    background: transparent;
+    color: var(--color-danger);
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+}
+
+.mobile-signout-btn:hover {
+    background: #fee2e2;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -775,7 +877,7 @@ small {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN WITH HAMBURGER MENU
    ═══════════════════════════════════════════════════════════ */
 
 @media (max-width: 1024px) {
@@ -797,6 +899,7 @@ small {
 }
 
 @media (max-width: 768px) {
+    /* Auth & Setup */
     .auth-header h1 { 
         font-size: 2rem; 
     }
@@ -809,6 +912,7 @@ small {
         padding: 2rem 1.5rem;
     }
     
+    /* Header */
     .header { 
         padding: 1rem 0; 
     }
@@ -822,30 +926,63 @@ small {
         gap: 1rem; 
     }
     
-    .spreadsheet-link { 
-        width: 100%; 
-        justify-content: center; 
+    /* Hide desktop user section on mobile */
+    .desktop-user-section {
+        display: none;
     }
     
-    .user-info { 
-        flex-direction: column; 
-        text-align: center; 
-        padding: 0.75rem; 
+    /* Hamburger Menu Visible */
+    .hamburger-btn {
+        display: flex;
     }
     
-    .nav .container { 
-        padding: 0.5rem 1rem; 
+    .nav .container {
+        position: relative;
     }
     
-    .nav-btn { 
-        padding: 0.625rem 1.25rem; 
-        font-size: 0.9rem; 
+    /* Slide-in Navigation */
+    .nav-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 280px;
+        height: 100vh;
+        background: white;
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        padding: 5rem 1rem 2rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        transition: right 0.3s ease;
+        z-index: 100;
+        overflow-y: auto;
     }
     
+    .nav-links.active {
+        right: 0;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        text-align: left;
+        justify-content: flex-start;
+    }
+    
+    /* Mobile Menu Items Visible */
+    .mobile-menu-items {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: auto;
+        padding-top: 1rem;
+    }
+    
+    /* Page Layout */
     .page { 
         padding: 1.5rem 0; 
     }
     
+    /* Dashboard */
     .dashboard-section { 
         grid-template-columns: 1fr; 
         gap: 1rem; 
@@ -860,6 +997,7 @@ small {
         font-size: 2.5rem; 
     }
     
+    /* Cards & Forms */
     .card { 
         padding: 1.5rem; 
     }
@@ -876,21 +1014,36 @@ small {
         width: 100%; 
     }
     
+    /* Summary */
     .summary-strip { 
         flex-direction: column; 
     }
     
+    /* Tables */
     .transactions-table th, 
     .transactions-table td { 
         padding: 0.75rem 0.5rem; 
         font-size: 0.875rem; 
     }
     
+    /* Toast */
     .toast { 
         bottom: 1rem; 
         right: 1rem; 
         left: 1rem; 
         max-width: none; 
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    /* Tablet: Keep normal nav, no hamburger */
+    .hamburger-btn {
+        display: none;
+    }
+    
+    .nav-links {
+        display: flex;
+        flex-direction: row;
     }
 }
 
@@ -916,6 +1069,14 @@ small {
     .modal-content {
         padding: 1.5rem;
     }
+    
+    .section-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .section-header h2 {
+        font-size: 1.25rem;
+    }
 }
 
 @media print {
@@ -924,7 +1085,9 @@ small {
     .btn, 
     .modal, 
     .toast, 
-    .loading-overlay { 
+    .loading-overlay,
+    .hamburger-btn,
+    .nav-overlay { 
         display: none !important; 
     }
     

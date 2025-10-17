@@ -4,6 +4,7 @@
 
 const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyEg5rdUs9X9UGC6vUg18Mxgvld7rG17JdG3BhOr72tDMAkrljcIoj2ALAwaFWx-nD2/exec';
 
+
 let transactions = [];
 let dashboardData = {};
 let currentUser = null;
@@ -69,6 +70,8 @@ async function checkUserSetup() {
                 if (r.sheetUrl) {
                     document.getElementById('sheet-link').href = r.sheetUrl;
                     document.getElementById('sheet-link').style.display = 'inline-flex';
+                    document.getElementById('mobile-sheet-link').href = r.sheetUrl;
+                    document.getElementById('mobile-sheet-link').style.display = 'flex';
                 }
                 
                 initializeApp();
@@ -100,6 +103,8 @@ async function handleCreateSpreadsheet() {
             if (r.sheetUrl) {
                 document.getElementById('sheet-link').href = r.sheetUrl;
                 document.getElementById('sheet-link').style.display = 'inline-flex';
+                document.getElementById('mobile-sheet-link').href = r.sheetUrl;
+                document.getElementById('mobile-sheet-link').style.display = 'flex';
             }
             
             document.getElementById('setup-screen').style.display = 'none';
@@ -170,6 +175,27 @@ async function apiCall(action, params = {}) {
 }
 
 // ════════════════════════════════════════════════════════════
+// MOBILE MENU TOGGLE
+// ════════════════════════════════════════════════════════════
+
+function toggleMobileMenu() {
+    const navLinks = document.getElementById('nav-links');
+    const hamburger = document.getElementById('hamburger-btn');
+    const overlay = document.getElementById('nav-overlay');
+    
+    navLinks.classList.toggle('active');
+    hamburger.classList.toggle('active');
+    overlay.classList.toggle('active');
+    
+    // Prevent body scroll when menu is open
+    if (navLinks.classList.contains('active')) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+}
+
+// ════════════════════════════════════════════════════════════
 // SETUP
 // ════════════════════════════════════════════════════════════
 
@@ -192,6 +218,17 @@ function switchPage(p) {
     document.querySelector(`[data-page="${p}"]`).classList.add('active');
     document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
     document.getElementById(`${p}-page`).classList.add('active');
+    
+    // Close mobile menu
+    const navLinks = document.getElementById('nav-links');
+    const hamburger = document.getElementById('hamburger-btn');
+    const overlay = document.getElementById('nav-overlay');
+    if (navLinks.classList.contains('active')) {
+        navLinks.classList.remove('active');
+        hamburger.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
     
     if (p === 'dashboard') loadDashboard();
     else if (p === 'transactions') loadTransactions();
@@ -266,7 +303,7 @@ async function handleAddBank(e) {
 }
 
 async function deleteBank(bankCode) {
-    if (!confirm(`Delete bank "${bankCode}"?`)) return;
+    if (!confirm(`Delete bank "${bankCode}"? All associated data will remain but the bank will be removed.`)) return;
     
     showLoading();
     try {
@@ -303,6 +340,8 @@ async function loadDashboard() {
             if (r.data.sheetUrl) {
                 document.getElementById('sheet-link').href = r.data.sheetUrl;
                 document.getElementById('sheet-link').style.display = 'inline-flex';
+                document.getElementById('mobile-sheet-link').href = r.data.sheetUrl;
+                document.getElementById('mobile-sheet-link').style.display = 'flex';
             }
             
             renderDashboard();
@@ -540,7 +579,7 @@ async function handleEditTransaction(e) {
 }
 
 async function deleteTransaction(id) {
-    if (!confirm('Delete?')) return;
+    if (!confirm('Delete this transaction?')) return;
     
     showLoading();
     try {
@@ -558,7 +597,7 @@ async function deleteTransaction(id) {
 }
 
 // ════════════════════════════════════════════════════════════
-// SETTINGS (WITH ONE-TIME PREVIOUS BALANCE LOCK)
+// SETTINGS (NO MANUAL PREVIOUS BALANCE INPUT)
 // ════════════════════════════════════════════════════════════
 
 async function loadSettings() {
@@ -575,32 +614,9 @@ async function loadSettings() {
 }
 
 function renderBankSettings(settings) {
-    const isLocked = settings.previous_balance_locked === 'true';
-    
     const container = document.getElementById('banks-settings');
     container.innerHTML = '';
     
-    // Warning banner if not locked
-    if (!isLocked) {
-        const warningBanner = document.createElement('div');
-        warningBanner.style.cssText = 'background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;';
-        warningBanner.innerHTML = `
-            <div style="display: flex; gap: 1rem; align-items: start;">
-                <div style="font-size: 2rem;">⚠️</div>
-                <div>
-                    <strong style="color: #92400e; display: block; margin-bottom: 0.5rem; font-size: 1.1rem;">First Time Setup</strong>
-                    <p style="color: #78350f; margin: 0; line-height: 1.6;">
-                        Enter your <strong>current bank balances</strong> in the "Previous Balance" fields below. 
-                        After you save, these fields will be <strong>locked</strong> and automatically updated during monthly rollovers.
-                        This is a <strong>one-time setup</strong>.
-                    </p>
-                </div>
-            </div>
-        `;
-        container.appendChild(warningBanner);
-    }
-    
-    // Bank settings
     userBanks.forEach(bank => {
         const bankGroup = document.createElement('div');
         bankGroup.className = 'bank-settings-group';
@@ -613,20 +629,15 @@ function renderBankSettings(settings) {
             <div class="form-group">
                 <label for="previous-${bank.code}">
                     📅 Previous Balance (Last Month's Net)
-                    ${isLocked ? '<span style="color: #16a34a; font-size: 0.85rem;">🔒 Locked</span>' : '<span style="color: #f59e0b; font-size: 0.85rem;">⚠️ First Time Setup</span>'}
+                    <span style="color: #16a34a; font-size: 0.85rem;">🔒 Auto-Updated</span>
                 </label>
-                <input 
-                    type="number" 
-                    id="previous-${bank.code}" 
-                    step="0.01" 
-                    value="${settings[`previous_balance_${bank.code}`] || 0}" 
-                    ${isLocked ? 'readonly disabled' : 'required'}
-                    style="${isLocked ? 'background: #f1f5f9; cursor: not-allowed; color: #64748b;' : 'background: #fef3c7; border: 2px solid #f59e0b;'}"
-                >
-                <small style="color: ${isLocked ? '#64748b' : '#f59e0b'};">
-                    ${isLocked 
-                        ? '🔒 Auto-updated by rollover - Cannot be edited' 
-                        : '⚠️ Enter your starting balance for this month. After saving, this will be locked and auto-updated.'}
+                <div style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); padding: 1.25rem; border-radius: 12px; border: 2px solid ${bank.color};">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: ${bank.color}; text-align: center;">
+                        ${formatCurrency(settings[`previous_balance_${bank.code}`] || 0)}
+                    </div>
+                </div>
+                <small style="color: #64748b; margin-top: 0.5rem; display: block;">
+                    🔒 Updated automatically during monthly rollover. Starts at ₹0 for first month.
                 </small>
             </div>
             
@@ -637,7 +648,7 @@ function renderBankSettings(settings) {
             </div>
             
             <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 1.25rem; border-radius: 12px; margin-top: 1rem; border: 2px solid ${bank.color};">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <strong style="color: #1e40af; font-size: 1rem;">Opening Balance:</strong>
                     <span style="font-size: 1.5rem; font-weight: 700; color: ${bank.color};">
                         ₹${((parseFloat(settings[`previous_balance_${bank.code}`]) || 0) + (parseFloat(settings[`monthly_input_${bank.code}`]) || 0)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
@@ -654,56 +665,27 @@ function renderBankSettings(settings) {
 
 async function handleSaveSettings(e) {
     e.preventDefault();
-    
-    const settingsResponse = await apiCall('getSettings');
-    const isLocked = settingsResponse.success && settingsResponse.data.previous_balance_locked === 'true';
-    
-    if (!isLocked) {
-        const confirmMsg = '⚠️ IMPORTANT: First Time Setup\n\n' +
-            'You are about to set your starting balances.\n\n' +
-            '✅ After saving, "Previous Balance" fields will be LOCKED\n' +
-            '✅ They will only be updated automatically during rollover\n' +
-            '✅ You cannot manually edit them again\n\n' +
-            'Make sure your balances are correct!\n\n' +
-            'Continue?';
-        
-        if (!confirm(confirmMsg)) {
-            return;
-        }
-    }
-    
     showLoading();
     
     try {
         const params = { 
-            salary_amount: document.getElementById('salary-input').value,
-            lock_previous_balance: !isLocked ? 'true' : 'false'
+            salary_amount: document.getElementById('salary-input').value
         };
         
         userBanks.forEach(bank => {
             const inputField = document.getElementById(`input-${bank.code}`);
             if (inputField) params[`monthly_input_${bank.code}`] = inputField.value;
-            
-            if (!isLocked) {
-                const prevField = document.getElementById(`previous-${bank.code}`);
-                if (prevField) params[`previous_balance_${bank.code}`] = prevField.value;
-            }
         });
         
         const r = await apiCall('updateSettings', params);
         hideLoading();
         
         if (r.success) {
-            if (!isLocked && r.locked) {
-                showToast('✅ Settings saved!\n🔒 Previous Balance fields are now LOCKED', 'success');
-            } else {
-                showToast('✅ Settings saved!', 'success');
-            }
-            
+            showToast('✅ Settings saved!', 'success');
             setTimeout(() => {
                 loadSettings();
                 loadDashboard();
-            }, 1000);
+            }, 500);
         } else {
             showToast('❌ ' + r.error, 'error');
         }
@@ -713,29 +695,95 @@ async function handleSaveSettings(e) {
     }
 }
 
+// ════════════════════════════════════════════════════════════
+// ROLLOVER MONTH (ROBUST WITH VALIDATION)
+// ════════════════════════════════════════════════════════════
+
 async function handleRollover() {
-    if (!confirm('📅 Rollover to next month?\n\nThis will:\n✅ Save Net Balances as Previous Balances\n✅ Reset Monthly Inputs to ₹0\n\nContinue?')) return;
+    // Load current dashboard first
+    showLoading();
+    const dashboardResponse = await apiCall('getDashboard');
+    hideLoading();
     
+    if (!dashboardResponse.success) {
+        showToast('❌ Cannot load dashboard data for rollover', 'error');
+        return;
+    }
+    
+    const data = dashboardResponse.data;
+    
+    // Verify we have banks
+    if (!data.banks || Object.keys(data.banks).length === 0) {
+        showToast('❌ No banks configured. Please add banks first.', 'error');
+        return;
+    }
+    
+    // Build detailed confirmation message
+    let confirmMsg = '📅 ROLLOVER TO NEXT MONTH\n\n';
+    confirmMsg += '═══════════════════════════════════\n\n';
+    
+    Object.keys(data.banks).forEach(bankCode => {
+        const bank = data.banks[bankCode];
+        confirmMsg += `🏦 ${bank.name}\n`;
+        confirmMsg += `   Current Previous: ₹${bank.previous_balance.toFixed(2)}\n`;
+        confirmMsg += `   Current Input: ₹${bank.monthly_input.toFixed(2)}\n`;
+        confirmMsg += `   Opening: ₹${bank.opening_balance.toFixed(2)}\n`;
+        confirmMsg += `   Expenses: ₹${bank.expenses.toFixed(2)}\n`;
+        confirmMsg += `   Current Net: ₹${bank.net_balance.toFixed(2)}\n\n`;
+        confirmMsg += `   → NEW Previous: ₹${bank.net_balance.toFixed(2)} ✅\n`;
+        confirmMsg += `   → NEW Input: ₹0.00 ✅\n\n`;
+    });
+    
+    confirmMsg += '═══════════════════════════════════\n\n';
+    confirmMsg += 'This will:\n';
+    confirmMsg += '✅ Set Net Balances as new Previous Balances\n';
+    confirmMsg += '✅ Reset all Monthly Inputs to ₹0\n';
+    confirmMsg += '✅ Prepare for next month\n\n';
+    confirmMsg += '⚠️ This action cannot be undone!\n\n';
+    confirmMsg += 'Continue with rollover?';
+    
+    if (!confirm(confirmMsg)) {
+        showToast('ℹ️ Rollover cancelled', 'info');
+        return;
+    }
+    
+    // Perform rollover
     showLoading();
     try {
         const r = await apiCall('rolloverMonth');
         hideLoading();
         
         if (r.success) {
-            let msg = '✅ Month rolled over successfully!\n\n📅 New Previous Balances:\n';
-            Object.keys(r.newPreviousBalances).forEach(code => {
-                const bank = userBanks.find(b => b.code === code);
-                if (bank) msg += `  ${bank.name}: ₹${r.newPreviousBalances[code].toFixed(2)}\n`;
+            let successMsg = '✅ MONTH ROLLED OVER SUCCESSFULLY!\n\n';
+            successMsg += '📅 Rollover Date: ' + new Date(r.rolloverDate).toLocaleString('en-IN') + '\n\n';
+            successMsg += '━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+            
+            Object.keys(r.results).forEach(code => {
+                const result = r.results[code];
+                successMsg += `🏦 ${result.name}\n`;
+                successMsg += `   Previous Balance: ₹${result.newPrevious.toFixed(2)}\n`;
+                successMsg += `   Monthly Input: ₹0.00\n`;
+                successMsg += `   Opening Balance: ₹${result.newPrevious.toFixed(2)}\n\n`;
             });
-            msg += '\n➕ Monthly Inputs: Reset to ₹0.00';
-            showToast(msg, 'success');
-            setTimeout(() => { loadSettings(); loadDashboard(); }, 1000);
+            
+            successMsg += '━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+            successMsg += '✅ Ready for next month!\n';
+            successMsg += '➕ Add your new Monthly Inputs in Settings';
+            
+            showToast(successMsg, 'success');
+            
+            // Reload everything
+            setTimeout(() => { 
+                loadSettings(); 
+                loadDashboard(); 
+                loadTransactions();
+            }, 1500);
         } else {
-            showToast('❌ ' + r.error, 'error');
+            showToast('❌ Rollover failed: ' + r.error, 'error');
         }
     } catch (e) {
         hideLoading();
-        showToast('❌ ' + e.message, 'error');
+        showToast('❌ Rollover error: ' + e.message, 'error');
     }
 }
 
@@ -746,18 +794,20 @@ async function handleExport() {
         hideLoading();
         
         if (r.success && r.data) {
-            const blob = new Blob([r.data], {type: 'text/csv'});
+            const blob = new Blob([r.data], {type: 'text/csv;charset=utf-8;'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `balance_sheet_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast('✅ Exported!', 'success');
+            showToast('✅ Exported successfully!', 'success');
+        } else {
+            showToast('❌ Export failed: ' + (r.error || 'Unknown error'), 'error');
         }
     } catch (e) {
         hideLoading();
-        showToast('❌ Failed', 'error');
+        showToast('❌ Export error: ' + e.message, 'error');
     }
 }
 
@@ -770,8 +820,19 @@ function formatCurrency(v) {
 }
 
 function formatDateTime(iso) { 
-    try { return new Date(iso).toLocaleString('en-IN'); } 
-    catch(e) { return iso; } 
+    try { 
+        const date = new Date(iso);
+        return date.toLocaleString('en-IN', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } 
+    catch(e) { 
+        return iso; 
+    } 
 }
 
 function escapeHtml(t) { 
@@ -792,7 +853,7 @@ function showToast(m, t='info') {
     const toast = document.getElementById('toast'); 
     toast.textContent = m; 
     toast.className = `toast ${t} active`; 
-    setTimeout(() => toast.classList.remove('active'), 5000);
+    setTimeout(() => toast.classList.remove('active'), 6000);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -805,9 +866,12 @@ window.deleteBank = deleteBank;
 window.handleCredentialResponse = handleCredentialResponse;
 window.handleSignOut = handleSignOut;
 window.handleCreateSpreadsheet = handleCreateSpreadsheet;
+window.toggleMobileMenu = toggleMobileMenu;
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('authYear').textContent = new Date().getFullYear();
-    console.log('%c💰 Balance Sheet Manager - Auto-Create', 'color: #2563eb; font-size: 18px; font-weight: bold;');
-    console.log('%c✅ One-Click Setup + Locked Previous Balance', 'color: #16a34a; font-weight: bold;');
+    console.log('%c💰 Balance Sheet Manager - FINAL VERSION', 'color: #2563eb; font-size: 18px; font-weight: bold;');
+    console.log('%c✅ Auto-Create | Auto Previous Balance | Robust Rollover', 'color: #16a34a; font-weight: bold;');
+    console.log('%c📱 Responsive with Hamburger Menu', 'color: #f59e0b; font-weight: bold;');
+    console.log('%c🚀 Ready for deployment!', 'color: #dc2626; font-weight: bold;');
 });
