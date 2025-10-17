@@ -1,6 +1,6 @@
 /**
- * BALANCE SHEET MANAGER - COMPLETE WITH HAMBURGER MENU
- * Auto-Create + Auto Previous Balance + Robust Rollover + Mobile Navigation
+ * BALANCE SHEET MANAGER - COMPLETE FINAL VERSION
+ * Auto-Create + Auto Previous Balance + Robust Rollover + Hamburger Menu + Settings Sign Out
  * Mobile + Tablet + Desktop Optimized
  */
 
@@ -226,6 +226,7 @@ body {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
+    align-items: center;
 }
 
 .nav-btn {
@@ -253,7 +254,7 @@ body {
     box-shadow: var(--shadow-md);
 }
 
-/* Hamburger Button */
+/* Hamburger Button - WITH POSITIONING */
 .hamburger-btn {
     display: none;
     flex-direction: column;
@@ -265,6 +266,9 @@ body {
     cursor: pointer;
     padding: 0;
     z-index: 102;
+    position: relative;
+    top: 6px;
+    flex-shrink: 0;
 }
 
 .hamburger-btn span {

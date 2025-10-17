@@ -26,9 +26,15 @@ function handleCredentialResponse(response) {
     
     console.log('%c✅ User authenticated', 'color: #16a34a; font-weight: bold;', currentUser.email);
     
+    // Header user info
     document.getElementById('user-name').textContent = currentUser.name;
     document.getElementById('user-email').textContent = currentUser.email;
     document.getElementById('user-avatar').src = currentUser.picture;
+    
+    // Settings page user info (sync immediately)
+    document.getElementById('settings-user-name').textContent = currentUser.name;
+    document.getElementById('settings-user-email').textContent = currentUser.email;
+    document.getElementById('settings-user-avatar').src = currentUser.picture;
     
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
@@ -187,7 +193,6 @@ function toggleMobileMenu() {
     hamburger.classList.toggle('active');
     overlay.classList.toggle('active');
     
-    // Prevent body scroll when menu is open
     if (navLinks.classList.contains('active')) {
         document.body.style.overflow = 'hidden';
     } else {
@@ -219,7 +224,6 @@ function switchPage(p) {
     document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
     document.getElementById(`${p}-page`).classList.add('active');
     
-    // Close mobile menu
     const navLinks = document.getElementById('nav-links');
     const hamburger = document.getElementById('hamburger-btn');
     const overlay = document.getElementById('nav-overlay');
@@ -595,7 +599,6 @@ async function deleteTransaction(id) {
         showToast('❌ ' + e.message, 'error');
     }
 }
-
 // ════════════════════════════════════════════════════════════
 // SETTINGS (NO MANUAL PREVIOUS BALANCE INPUT)
 // ════════════════════════════════════════════════════════════
@@ -700,7 +703,6 @@ async function handleSaveSettings(e) {
 // ════════════════════════════════════════════════════════════
 
 async function handleRollover() {
-    // Load current dashboard first
     showLoading();
     const dashboardResponse = await apiCall('getDashboard');
     hideLoading();
@@ -712,13 +714,11 @@ async function handleRollover() {
     
     const data = dashboardResponse.data;
     
-    // Verify we have banks
     if (!data.banks || Object.keys(data.banks).length === 0) {
         showToast('❌ No banks configured. Please add banks first.', 'error');
         return;
     }
     
-    // Build detailed confirmation message
     let confirmMsg = '📅 ROLLOVER TO NEXT MONTH\n\n';
     confirmMsg += '═══════════════════════════════════\n\n';
     
@@ -747,7 +747,6 @@ async function handleRollover() {
         return;
     }
     
-    // Perform rollover
     showLoading();
     try {
         const r = await apiCall('rolloverMonth');
@@ -772,7 +771,6 @@ async function handleRollover() {
             
             showToast(successMsg, 'success');
             
-            // Reload everything
             setTimeout(() => { 
                 loadSettings(); 
                 loadDashboard(); 
@@ -872,6 +870,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('authYear').textContent = new Date().getFullYear();
     console.log('%c💰 Balance Sheet Manager - FINAL VERSION', 'color: #2563eb; font-size: 18px; font-weight: bold;');
     console.log('%c✅ Auto-Create | Auto Previous Balance | Robust Rollover', 'color: #16a34a; font-weight: bold;');
-    console.log('%c📱 Responsive with Hamburger Menu', 'color: #f59e0b; font-weight: bold;');
+    console.log('%c📱 Responsive with Hamburger Menu | Sign Out in Settings', 'color: #f59e0b; font-weight: bold;');
     console.log('%c🚀 Ready for deployment!', 'color: #dc2626; font-weight: bold;');
 });

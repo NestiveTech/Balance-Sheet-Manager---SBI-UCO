@@ -20,9 +20,9 @@
                 <p style="text-align: center; color: #64748b; margin-bottom: 1.5rem;">
                     Your personal spreadsheet will be created in YOUR Drive
                 </p>
-                 
+                
                 <div id="g_id_onload"
-                     data-client_id="213013984719-bgrl6bil62nmt2b66d03tnq7ms0rage7.apps.googleusercontent.com"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
                      data-callback="handleCredentialResponse"
                      data-auto_prompt="false">
                 </div>
@@ -118,20 +118,17 @@
 
             <nav class="nav">
                 <div class="container">
-                    <!-- Hamburger Button (Mobile/Tablet Only) -->
                     <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()">
                         <span></span>
                         <span></span>
                         <span></span>
                     </button>
                     
-                    <!-- Navigation Buttons -->
                     <div class="nav-links" id="nav-links">
                         <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
                         <button class="nav-btn" data-page="transactions">💳 Transactions</button>
                         <button class="nav-btn" data-page="settings">⚙️ Settings</button>
                         
-                        <!-- Mobile Menu Items (visible only on mobile) -->
                         <div class="mobile-menu-items">
                             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0.5rem 0;">
                             <a href="#" class="mobile-sheet-link" id="mobile-sheet-link" target="_blank" style="display: none;">
@@ -143,7 +140,6 @@
                         </div>
                     </div>
                     
-                    <!-- Overlay for mobile menu -->
                     <div class="nav-overlay" id="nav-overlay" onclick="toggleMobileMenu()"></div>
                 </div>
             </nav>
@@ -270,12 +266,32 @@
                         <h2>📤 Export</h2>
                         <button class="btn btn-secondary" id="export-btn">📤 Export to CSV</button>
                     </div>
+
+                    <div class="card">
+                        <h2>🔐 Account</h2>
+                        <div style="display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid var(--color-primary);">
+                            <img id="settings-user-avatar" src="" alt="User" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--color-primary); box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <div style="flex: 1;">
+                                <div id="settings-user-name" style="font-weight: 700; font-size: 1.2rem; color: var(--color-text); margin-bottom: 0.25rem;">User Name</div>
+                                <div id="settings-user-email" style="color: var(--color-text-light); font-size: 0.95rem;">email@example.com</div>
+                                <div style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: rgba(37, 99, 235, 0.1); border-radius: 8px; display: inline-block;">
+                                    <span style="color: var(--color-primary); font-weight: 600; font-size: 0.85rem;">✅ Authenticated</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="handleSignOut()" class="btn btn-danger" style="width: 100%; font-size: 1.05rem; padding: 1rem;">
+                            🚪 Sign Out from Account
+                        </button>
+                        <p style="text-align: center; color: var(--color-text-light); margin-top: 1rem; font-size: 0.9rem;">
+                            Your data is securely stored in your Google Drive
+                        </p>
+                    </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- MODALS -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h2>✏️ Edit Transaction</h2>
@@ -307,7 +323,6 @@
         </div>
     </div>
 
-    <!-- Add Bank Modal -->
     <div id="add-bank-modal" class="modal">
         <div class="modal-content">
             <h2>🏦 Add New Bank</h2>
