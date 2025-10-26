@@ -3,1172 +3,359 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💰 Balance Sheet Manager</title>
-    
-    <!-- React & ReactDOM from CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Google Sign-In -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
-    <style>
-        /* Copy your complete CSS from style.css */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --color-primary: #2563eb;
-            --color-primary-dark: #1e40af;
-            --color-primary-light: #3b82f6;
-            --color-accent: #0ea5e9;
-            --color-success: #16a34a;
-            --color-danger: #dc2626;
-            --color-warning: #f59e0b;
-            --color-neutral: #64748b;
-            --color-bg: #f8fafc;
-            --color-card: #ffffff;
-            --color-border: #e2e8f0;
-            --color-text: #1e293b;
-            --color-text-light: #64748b;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            --radius: 8px;
-            --radius-lg: 12px;
-            --transition: all 0.3s ease;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--color-bg);
-            color: var(--color-text);
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .auth-screen {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem;
-        }
-
-        .auth-container {
-            max-width: 500px;
-            width: 100%;
-        }
-
-        .auth-header {
-            text-align: center;
-            color: white;
-            margin-bottom: 2rem;
-        }
-
-        .auth-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .auth-card {
-            background: white;
-            padding: 3rem;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        #setup-screen {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .setup-card {
-            background: white;
-            padding: 3rem;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 600px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-            color: white;
-            padding: 1.5rem 0;
-            box-shadow: var(--shadow-md);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .header-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .desktop-user-section {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius);
-            color: white;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid white;
-        }
-
-        .spreadsheet-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            text-decoration: none;
-            border-radius: var(--radius);
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .nav {
-            background: white;
-            border-bottom: 2px solid var(--color-border);
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            top: 0;
-            z-index: 99;
-        }
-
-        .nav .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0.75rem 1rem;
-            display: flex;
-            gap: 0.5rem;
-            overflow-x: auto;
-            align-items: center;
-        }
-
-        .nav-btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            background: transparent;
-            color: var(--color-text-light);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            border-radius: var(--radius);
-            transition: var(--transition);
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .nav-btn:hover {
-            background: var(--color-bg);
-            color: var(--color-primary);
-        }
-
-        .nav-btn.active {
-            background: var(--color-primary);
-            color: white;
-            box-shadow: var(--shadow-md);
-        }
-
-        .hamburger-btn {
-            display: none;
-            flex-direction: column;
-            justify-content: space-around;
-            width: 32px;
-            height: 32px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-        }
-
-        .hamburger-btn span {
-            width: 100%;
-            height: 3px;
-            background: var(--color-primary);
-            border-radius: 10px;
-            transition: var(--transition);
-        }
-
-        .nav-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 98;
-        }
-
-        .nav-overlay.active {
-            display: block;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .page {
-            display: none;
-            padding: 2rem 0;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .section-header {
-            margin: 2rem 0 1.5rem 0;
-            padding: 1.5rem 2rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            color: white;
-        }
-
-        .section-header h2 {
-            font-size: 1.5rem;
-            margin: 0;
-        }
-
-        .dashboard-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .tile {
-            background: var(--color-card);
-            padding: 1.5rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            border-left: 4px solid;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .tile:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .tile-icon {
-            font-size: 3rem;
-        }
-
-        .tile-content {
-            flex: 1;
-        }
-
-        .tile-label {
-            font-size: 0.875rem;
-            color: var(--color-text-light);
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .tile-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--color-text);
-        }
-
-        .tile-value-success {
-            color: var(--color-success);
-        }
-
-        .tile-value-danger {
-            color: var(--color-danger);
-        }
-
-        .card {
-            background: var(--color-card);
-            padding: 2rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 1.5rem;
-        }
-
-        .card h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            color: var(--color-primary);
-            border-bottom: 2px solid var(--color-primary);
-            padding-bottom: 0.5rem;
-        }
-
-        .quick-add-form {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            align-items: end;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--color-text);
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 0.875rem;
-            border: 2px solid var(--color-border);
-            border-radius: var(--radius);
-            font-size: 1rem;
-            transition: var(--transition);
-            font-family: inherit;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .btn {
-            padding: 0.875rem 1.75rem;
-            border: none;
-            border-radius: var(--radius);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            white-space: nowrap;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-primary {
-            background: var(--color-primary);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: var(--color-neutral);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--color-danger);
-            color: white;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
-
-        .btn-edit {
-            background: var(--color-warning);
-            color: white;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            margin-right: 0.5rem;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .summary-strip {
-            display: flex;
-            justify-content: space-around;
-            background: var(--color-card);
-            padding: 1.5rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-            border: 2px solid var(--color-primary);
-        }
-
-        .summary-item {
-            text-align: center;
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .summary-label {
-            display: block;
-            font-size: 0.875rem;
-            color: var(--color-text-light);
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .summary-value {
-            display: block;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--color-primary);
-        }
-
-        .table-container {
-            overflow-x: auto;
-            background: white;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-        }
-
-        .transactions-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 700px;
-        }
-
-        .transactions-table thead {
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-            color: white;
-        }
-
-        .transactions-table th, .transactions-table td {
-            padding: 1rem;
-            text-align: left;
-        }
-
-        .transactions-table td {
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        .transactions-table tbody tr:hover {
-            background: #dbeafe;
-        }
-
-        .bank-badge {
-            display: inline-block;
-            padding: 0.375rem 0.875rem;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: white;
-        }
-
-        .bank-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background: var(--color-bg);
-            border-radius: var(--radius);
-            margin-bottom: 1rem;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: var(--radius-lg);
-            max-width: 500px;
-            width: 100%;
-            box-shadow: var(--shadow-xl);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-content h2 {
-            color: var(--color-primary);
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid var(--color-primary);
-            padding-bottom: 0.5rem;
-        }
-
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .loading-overlay.active {
-            display: flex;
-        }
-
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid var(--color-border);
-            border-top-color: var(--color-primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            padding: 1rem 1.5rem;
-            background: var(--color-text);
-            color: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-xl);
-            transform: translateY(150%);
-            transition: var(--transition);
-            z-index: 10000;
-            max-width: 400px;
-        }
-
-        .toast.active {
-            transform: translateY(0);
-        }
-
-        .toast.success {
-            background: var(--color-success);
-        }
-
-        .toast.error {
-            background: var(--color-danger);
-        }
-
-        .timestamp {
-            text-align: center;
-            color: var(--color-text-light);
-            font-size: 0.875rem;
-            padding: 1rem;
-            background: white;
-            border-radius: var(--radius);
-            margin-top: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .desktop-user-section {
-                display: none;
-            }
-
-            .hamburger-btn {
-                display: flex;
-            }
-
-            .nav-links {
-                position: fixed;
-                top: 0;
-                right: -100%;
-                width: 280px;
-                height: 100vh;
-                background: white;
-                box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-                padding: 5rem 1rem 2rem;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-                transition: right 0.3s ease;
-                z-index: 100;
-            }
-
-            .nav-links.active {
-                right: 0;
-            }
-
-            .nav-btn {
-                width: 100%;
-                text-align: left;
-            }
-
-            .dashboard-section {
-                grid-template-columns: 1fr;
-            }
-
-            .quick-add-form {
-                grid-template-columns: 1fr;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            .toast {
-                bottom: 1rem;
-                right: 1rem;
-                left: 1rem;
-            }
-        }
-    </style>
+    <title>Balance Sheet Manager - Multi-User</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="root"></div>
-
-    <!-- Configuration Script -->
-    <script>
-        // GitHub Pages URL will be like: https://username.github.io/repo-name/
-        // Replace with your actual values
-        const CONFIG = {
-            GOOGLE_CLIENT_ID: '213013984719-bgrl6bil62nmt2b66d03tnq7ms0rage7.apps.googleusercontent.com',
-            API_BASE_URL: 'https://script.google.com/macros/s/AKfycbyEg5rdUs9X9UGC6vUg18Mxgvld7rG17JdG3BhOr72tDMAkrljcIoj2ALAwaFWx-nD2/exec'
-        };
-    </script>
-
-    <script type="text/babel">
-        const { useState, useEffect, createContext, useContext } = React;
-        const AppContext = createContext();
-
-        function App() {
-            const [currentUser, setCurrentUser] = useState(null);
-            const [currentPage, setCurrentPage] = useState('dashboard');
-            const [transactions, setTransactions] = useState([]);
-            const [dashboardData, setDashboardData] = useState({});
-            const [userBanks, setUserBanks] = useState([]);
-            const [loading, setLoading] = useState(false);
-            const [toast, setToast] = useState({ message: '', type: '', active: false });
-            const [showSetup, setShowSetup] = useState(false);
-            const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-            const [sheetUrl, setSheetUrl] = useState('');
-            const [editModal, setEditModal] = useState({ active: false, transaction: null });
-            const [addBankModal, setAddBankModal] = useState(false);
-
-            useEffect(() => {
-                const initGoogleSignIn = () => {
-                    if (window.google) {
-                        try {
-                            window.google.accounts.id.initialize({
-                                client_id: CONFIG.GOOGLE_CLIENT_ID,
-                                callback: handleCredentialResponse,
-                            });
-                            console.log('Google Sign-In initialized');
-                        } catch (error) {
-                            console.error('Error initializing Google Sign-In:', error);
-                            showToast('⚠️ Google Sign-In not configured properly', 'error');
-                        }
-                    }
-                };
-
-                // Wait for Google script to load
-                if (document.readyState === 'complete') {
-                    initGoogleSignIn();
-                } else {
-                    window.addEventListener('load', initGoogleSignIn);
-                    return () => window.removeEventListener('load', initGoogleSignIn);
-                }
-            }, []);
-
-            const parseJwt = (token) => {
-                try {
-                    const base64Url = token.split('.')[1];
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    return JSON.parse(decodeURIComponent(atob(base64).split('').map(c => 
-                        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
-                } catch (error) {
-                    console.error('Error parsing JWT:', error);
-                    return null;
-                }
-            };
-
-            const handleCredentialResponse = async (response) => {
-                const payload = parseJwt(response.credential);
-                if (!payload) {
-                    showToast('❌ Authentication failed', 'error');
-                    return;
-                }
-
-                const user = { email: payload.email, name: payload.name, picture: payload.picture };
-                setCurrentUser(user);
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>💰 Balance Sheet Manager</h1>
+                <p>Secure Multi-User System</p>
+            </div>
+            
+            <div class="auth-card">
+                <h2>🔐 Sign in with Google</h2>
+                <p style="text-align: center; color: #64748b; margin-bottom: 1.5rem;">
+                    Your personal spreadsheet will be created in YOUR Drive
+                </p>
                 
-                setLoading(true);
-                try {
-                    const result = await apiCall('checkUser', {}, user.email);
-                    setLoading(false);
+                <div id="g_id_onload"
+                     data-client_id="213013984719-bgrl6bil62nmt2b66d03tnq7ms0rage7.apps.googleusercontent.com"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin" 
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="sign_in_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left"
+                     data-width="100%">
+                </div>
+                
+                <div style="margin-top: 2rem; padding: 1.25rem; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 12px; border-left: 4px solid #2563eb;">
+                    <strong style="color: #1e40af; display: block; margin-bottom: 0.75rem;">🔒 Privacy Features:</strong>
+                    <ul style="margin: 0; padding-left: 1.5rem; color: #64748b; font-size: 0.9rem; line-height: 1.8;">
+                        <li>One spreadsheet per user in THEIR Drive</li>
+                        <li>Auto-formatted with all sheets</li>
+                        <li>Complete data isolation</li>
+                        <li>You own 100% of your data</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="auth-footer">
+                <p>© <span id="authYear"></span> Balance Sheet Manager. Open Source.</p>
+            </div>
+        </div>
+    </div>
 
-                    if (result.success) {
-                        if (result.hasSpreadsheet) {
-                            setShowSetup(false);
-                            if (result.sheetUrl) setSheetUrl(result.sheetUrl);
-                            initializeApp();
-                            showToast('✅ Welcome back!', 'success');
-                        } else {
-                            setShowSetup(true);
-                        }
-                    } else {
-                        showToast('❌ ' + (result.error || 'Failed to check user'), 'error');
-                    }
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                }
-            };
-
-            const apiCall = async (action, params = {}, userEmail = null) => {
-                try {
-                    const url = new URL(CONFIG.API_BASE_URL);
-                    url.searchParams.set('action', action);
-                    url.searchParams.set('_t', Date.now());
-                    
-                    const email = userEmail || (currentUser ? currentUser.email : null);
-                    if (email) url.searchParams.set('userEmail', email);
-                    
-                    Object.keys(params).forEach(k => {
-                        if (params[k] !== null && params[k] !== undefined) {
-                            url.searchParams.set(k, params[k]);
-                        }
-                    });
-
-                    const response = await fetch(url.toString());
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return await response.json();
-                } catch (error) {
-                    console.error('API Call Error:', error);
-                    throw error;
-                }
-            };
-
-            const initializeApp = async () => {
-                try {
-                    await loadBanks();
-                    await loadDashboard();
-                    await loadTransactions();
-                } catch (error) {
-                    showToast('❌ Failed to load data', 'error');
-                }
-            };
-
-            const loadBanks = async () => {
-                try {
-                    const result = await apiCall('getBanks');
-                    if (result.success) setUserBanks(result.data || []);
-                } catch (error) {
-                    console.error('Load banks error:', error);
-                }
-            };
-
-            const loadDashboard = async () => {
-                setLoading(true);
-                try {
-                    const result = await apiCall('getDashboard');
-                    setLoading(false);
-                    if (result.success) {
-                        setDashboardData(result.data || {});
-                        if (result.data?.sheetUrl) setSheetUrl(result.data.sheetUrl);
-                    }
-                } catch (error) {
-                    setLoading(false);
-                    console.error('Load dashboard error:', error);
-                }
-            };
-
-            const loadTransactions = async () => {
-                setLoading(true);
-                try {
-                    const result = await apiCall('getTransactions');
-                    setLoading(false);
-                    if (result.success) setTransactions(result.data || []);
-                } catch (error) {
-                    setLoading(false);
-                    console.error('Load transactions error:', error);
-                }
-            };
-
-            const addTransaction = async (data) => {
-                setLoading(true);
-                try {
-                    const result = await apiCall('addTransaction', data);
-                    setLoading(false);
-                    if (result.success) {
-                        showToast('✅ Transaction added!', 'success');
-                        await loadTransactions();
-                        await loadDashboard();
-                        return true;
-                    }
-                    showToast('❌ Failed to add transaction', 'error');
-                    return false;
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                    return false;
-                }
-            };
-
-            const editTransaction = async (data) => {
-                setLoading(true);
-                try {
-                    const result = await apiCall('editTransaction', data);
-                    setLoading(false);
-                    if (result.success) {
-                        showToast('✅ Transaction updated!', 'success');
-                        await loadTransactions();
-                        await loadDashboard();
-                        setEditModal({ active: false, transaction: null });
-                        return true;
-                    }
-                    showToast('❌ Failed to update', 'error');
-                    return false;
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                    return false;
-                }
-            };
-
-            const deleteTransaction = async (rowIndex) => {
-                if (!confirm('Delete this transaction?')) return;
-                setLoading(true);
-                try {
-                    const result = await apiCall('deleteTransaction', { rowIndex });
-                    setLoading(false);
-                    if (result.success) {
-                        showToast('✅ Deleted!', 'success');
-                        await loadTransactions();
-                        await loadDashboard();
-                    }
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                }
-            };
-
-            const addBank = async (data) => {
-                setLoading(true);
-                try {
-                    const result = await apiCall('addBank', data);
-                    setLoading(false);
-                    if (result.success) {
-                        showToast('✅ Bank added!', 'success');
-                        await loadBanks();
-                        await loadDashboard();
-                        setAddBankModal(false);
-                        return true;
-                    }
-                    return false;
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                    return false;
-                }
-            };
-
-            const deleteBank = async (bankCode) => {
-                if (!confirm(`Delete bank "${bankCode}"?`)) return;
-                setLoading(true);
-                try {
-                    const result = await apiCall('deleteBank', { bankCode });
-                    setLoading(false);
-                    if (result.success) {
-                        showToast('✅ Bank deleted!', 'success');
-                        await loadBanks();
-                        await loadDashboard();
-                    }
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                }
-            };
-
-            const saveSettings = async (salary) => {
-                setLoading(true);
-                try {
-                    const result = await apiCall('saveSettings', { salary });
-                    setLoading(false);
-                    if (result.success) {
-                        showToast('✅ Settings saved!', 'success');
-                        await loadDashboard();
-                        return true;
-                    }
-                    return false;
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                    return false;
-                }
-            };
-
-            const handleExport = async () => {
-                setLoading(true);
-                try {
-                    const result = await apiCall('exportData');
-                    setLoading(false);
-                    if (result.success) showToast('✅ Data exported!', 'success');
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                }
-            };
-
-            const handleRollover = async () => {
-                if (!confirm('Create new month with rollover?')) return;
-                setLoading(true);
-                try {
-                    const result = await apiCall('rollover');
-                    setLoading(false);
-                    if (result.success) {
-                        showToast('✅ ' + result.message, 'success');
-                        await loadDashboard();
-                        await loadTransactions();
-                    }
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                }
-            };
-
-            const createSpreadsheet = async () => {
-                setLoading(true);
-                try {
-                    const result = await apiCall('createSpreadsheet');
-                    setLoading(false);
-                    if (result.success) {
-                        showToast('✅ ' + result.message, 'success');
-                        if (result.sheetUrl) setSheetUrl(result.sheetUrl);
-                        setShowSetup(false);
-                        initializeApp();
-                    } else {
-                        showToast('❌ Failed to create spreadsheet', 'error');
-                    }
-                } catch (error) {
-                    setLoading(false);
-                    showToast('❌ ' + error.message, 'error');
-                }
-            };
-
-            const showToast = (message, type) => {
-                setToast({ message, type, active: true });
-                setTimeout(() => setToast({ message: '', type: '', active: false }), 3000);
-            };
-
-            const handleSignOut = () => {
-                if (confirm('Sign out?')) {
-                    if (window.google?.accounts?.id) {
-                        window.google.accounts.id.disableAutoSelect();
-                    }
-                    setCurrentUser(null);
-                    setUserBanks([]);
-                    setTransactions([]);
-                    setDashboardData({});
-                    showToast('👋 Signed out', 'success');
-                }
-            };
-
-            const formatCurrency = (amount) => {
-                return new Intl.NumberFormat('en-IN', {
-                    style: 'currency',
-                    currency: 'INR',
-                }).format(amount || 0);
-            };
-
-            const formatDate = (dateString) => {
-                if (!dateString) return '';
-                return new Date(dateString).toLocaleDateString('en-IN');
-            };
-
-            const formatDateTime = (dateString) => {
-                if (!dateString) return '';
-                return new Date(dateString).toLocaleString('en-IN');
-            };
-
-            const adjustColor = (color, amount) => {
-                return '#' + color.replace(/^#/, '').replace(/../g, color => 
-                    ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
-            };
-
-            const contextValue = {
-                currentUser, currentPage, setCurrentPage, transactions, dashboardData,
-                userBanks, loading, apiCall, addTransaction, editTransaction, deleteTransaction,
-                addBank, deleteBank, saveSettings, handleExport, handleRollover, showToast,
-                formatCurrency, formatDate, formatDateTime, mobileMenuOpen, setMobileMenuOpen,
-                sheetUrl, editModal, setEditModal, addBankModal, setAddBankModal, adjustColor
-            };
-
-            if (!currentUser) {
-                return (
-                    <AppContext.Provider value={contextValue}>
-                        <AuthScreen />
-                        <Toast toast={toast} />
-                        <LoadingOverlay loading={loading} />
-                    </AppContext.Provider>
-                );
-            }
-
-            if (showSetup) {
-                return (
-                    <AppContext.Provider value={contextValue}>
-                        <SetupScreen createSpreadsheet={createSpreadsheet} />
-                        <Toast toast={toast} />
-                        <LoadingOverlay loading={loading} />
-                    </AppContext.Provider>
-                );
-            }
-
-            return (
-                <AppContext.Provider value={contextValue}>
-                    <div className="app">
-                        <Header user={currentUser} onSignOut={handleSignOut} />
-                        <Navigation />
-                        <main className="container">
-                            {currentPage === 'dashboard' && <Dashboard />}
-                            {currentPage === 'transactions' && <Transactions />}
-                            {currentPage === 'settings' && <Settings />}
-                        </main>
-                        <Toast toast={toast} />
-                        <LoadingOverlay loading={loading} />
-                        {editModal.active && <EditTransactionModal />}
-                        {addBankModal && <AddBankModal />}
+    <!-- APP SCREEN -->
+    <div id="app-screen" style="display: none;">
+        <!-- SETUP SCREEN -->
+        <div id="setup-screen" style="display: none;">
+            <div class="setup-container">
+                <div class="setup-card">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+                        <h1 style="color: #2563eb; margin-bottom: 0.5rem;">Welcome to Balance Sheet Manager!</h1>
+                        <p style="color: #64748b; font-size: 1.1rem;">
+                            Let's create your personal spreadsheet
+                        </p>
                     </div>
-                </AppContext.Provider>
-            );
-        }
+                    
+                    <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #2563eb;">
+                        <h3 style="color: #1e40af; margin-bottom: 1rem;">🔐 What You'll Get:</h3>
+                        <ul style="margin: 0; padding-left: 1.5rem; color: #64748b; line-height: 2;">
+                            <li>Personal spreadsheet in YOUR Google Drive</li>
+                            <li>Pre-formatted with all necessary sheets</li>
+                            <li>Default banks (SBI & UCO) - you can add more</li>
+                            <li>Full ownership and control of your data</li>
+                            <li>Instant access to dashboard</li>
+                        </ul>
+                    </div>
+                    
+                    <button onclick="handleCreateSpreadsheet()" class="btn btn-primary" style="width: 100%; padding: 1.25rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                        <span style="font-size: 1.5rem;">📄</span>
+                        Create My Spreadsheet
+                    </button>
+                    
+                    <p style="text-align: center; color: #64748b; margin-top: 1.5rem; font-size: 0.9rem;">
+                        ⏱️ Takes less than 5 seconds • No configuration needed
+                    </p>
+                </div>
+            </div>
+        </div>
 
-        // Components from your original code...
-        // (Include all the components: AuthScreen, SetupScreen, Header, Navigation, Dashboard, Transactions, Settings, Modals, Toast, Loading)
-        // I'll provide the key ones below:
-
-        function AuthScreen() {
-            useEffect(() => {
-                const renderButton = () => {
-                    if (window.google) {
-                        try {
-                            window.google.accounts.id.renderButton(
-                                document.getElementById('google-signin-button'),
-                                { theme: 'outline', size: 'large', width: 300 }
-                            );
-                        } catch (error) {
-                            console.error('Error rendering Google button:', error);
-                        }
-                    }
-                };
-
-                if (document.readyState === 'complete') {
-                    renderButton();
-                } else {
-                    window.addEventListener('load', renderButton);
-                    return () => window.removeEventListener('load', renderButton);
-                }
-            }, []);
-
-            return (
-                <div className="auth-screen">
-                    <div className="auth-container">
-                        <div className="auth-header">
-                            <h1>💰 Balance Sheet Manager</h1>
-                            <p>Multi-User Financial Tracking</p>
+        <!-- MAIN APP -->
+        <div id="main-app" style="display: none;">
+            <header class="header">
+                <div class="container">
+                    <div class="header-content">
+                        <div>
+                            <h1 class="header-title">BALANCE SHEET — <span id="currentYear"></span></h1>
+                            <p class="header-subtitle">Previous + Input = Opening</p>
                         </div>
-                        <div className="auth-card">
-                            <h2>Sign in to Continue</h2>
-                            <div id="google-signin-button" style={{marginTop: '1.5rem'}}></div>
-                            <p style={{marginTop: '1rem', fontSize: '0.875rem', color: 'var(--color-text-light)'}}>
-                                Securely stored in your Google Drive
-                            </p>
+                        <div class="desktop-user-section">
+                            <div class="user-info">
+                                <img id="user-avatar" src="" alt="User" class="user-avatar">
+                                <div>
+                                    <div id="user-name" style="font-weight: 600;">User</div>
+                                    <div id="user-email" style="font-size: 0.85rem; opacity: 0.9;">email@example.com</div>
+                                </div>
+                            </div>
+                            <button onclick="handleSignOut()" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Sign Out</button>
+                            <a href="#" class="spreadsheet-link" id="sheet-link" target="_blank" style="display: none;">
+                                📊 Open Spreadsheet
+                            </a>
                         </div>
                     </div>
                 </div>
-            );
-        }
+            </header>
 
-        // Add all other components from the previous version (SetupScreen, Header, Navigation, Dashboard, Transactions, Settings, Modals)
-        // For brevity, I'm showing the pattern - include all components similarly
-
-        function Toast({ toast }) {
-            if (!toast.active) return null;
-            return <div className={`toast active ${toast.type}`}>{toast.message}</div>;
-        }
-
-        function LoadingOverlay({ loading }) {
-            if (!loading) return null;
-            return (
-                <div className="loading-overlay active">
-                    <div className="spinner"></div>
-                    <p>Loading...</p>
+            <nav class="nav">
+                <div class="container">
+                    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    
+                    <div class="nav-links" id="nav-links">
+                        <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+                        <button class="nav-btn" data-page="transactions">💳 Transactions</button>
+                        <button class="nav-btn" data-page="settings">⚙️ Settings</button>
+                        
+                        <div class="mobile-menu-items">
+                            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0.5rem 0;">
+                            <a href="#" class="mobile-sheet-link" id="mobile-sheet-link" target="_blank" style="display: none;">
+                                📊 Open Spreadsheet
+                            </a>
+                            <button onclick="handleSignOut()" class="mobile-signout-btn">
+                                🚪 Sign Out
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-overlay" id="nav-overlay" onclick="toggleMobileMenu()"></div>
                 </div>
-            );
-        }
+            </nav>
 
-        // Render
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+            <main class="container">
+                <!-- DASHBOARD PAGE -->
+                <div id="dashboard-page" class="page active">
+                    <div class="section-header salary-header">
+                        <h2>💰 SALARY INFORMATION</h2>
+                        <p>Salary stored for reference only</p>
+                    </div>
+                    <div class="dashboard-section salary-section">
+                        <div class="tile tile-neutral tile-large">
+                            <div class="tile-icon">💰</div>
+                            <div class="tile-content">
+                                <div class="tile-label">Monthly Salary</div>
+                                <div class="tile-value" id="salary-value">₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="banks-container"></div>
+
+                    <div class="section-header combined-header">
+                        <h2>📊 COMBINED TOTALS</h2>
+                        <p>All Banks Combined Overview</p>
+                    </div>
+                    <div class="dashboard-section combined-section">
+                        <div class="tile tile-combined tile-highlight">
+                            <div class="tile-icon">🏦</div>
+                            <div class="tile-content">
+                                <div class="tile-label">Combined Opening</div>
+                                <div class="tile-value" id="combined-opening">₹0.00</div>
+                            </div>
+                        </div>
+                        <div class="tile tile-combined">
+                            <div class="tile-icon">💸</div>
+                            <div class="tile-content">
+                                <div class="tile-label">Combined Expenses</div>
+                                <div class="tile-value tile-value-danger" id="combined-expenses">₹0.00</div>
+                            </div>
+                        </div>
+                        <div class="tile tile-combined tile-highlight">
+                            <div class="tile-icon">✅</div>
+                            <div class="tile-content">
+                                <div class="tile-label">Combined Net</div>
+                                <div class="tile-value tile-value-success" id="combined-net">₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timestamp">⏰ Last Updated: <span id="last-updated">Never</span></div>
+                </div>
+
+                <!-- TRANSACTIONS PAGE -->
+                <div id="transactions-page" class="page">
+                    <div class="card">
+                        <h2>➕ Add New Transaction</h2>
+                        <form id="quick-add-form" class="quick-add-form">
+                            <input type="date" id="new-date" required>
+                            <input type="text" id="new-description" placeholder="Description" required>
+                            <input type="number" id="new-amount" placeholder="Amount" step="0.01" min="0.01" required>
+                            <select id="new-bank" required>
+                                <option value="">Select Bank</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Add Transaction</button>
+                        </form>
+                    </div>
+                    
+                    <div class="summary-strip">
+                        <div class="summary-item">
+                            <span class="summary-label">Total Expenses:</span>
+                            <span class="summary-value" id="total-expenses">₹0.00</span>
+                        </div>
+                        <div id="bank-summary"></div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Sl No.</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Bank</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-tbody">
+                                <tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SETTINGS PAGE -->
+                <div id="settings-page" class="page">
+                    <div class="card">
+                        <h2>⚙️ Financial Settings</h2>
+                        <form id="settings-form" class="settings-form">
+                            <div class="form-group">
+                                <label for="salary-input">💰 Monthly Salary</label>
+                                <input type="number" id="salary-input" step="0.01" min="0" required>
+                                <small style="color: #64748b;">Stored for reference only</small>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem 0;">
+                                <h3 style="margin: 0;">🏦 Your Banks</h3>
+                                <button type="button" class="btn btn-primary" id="add-bank-btn">➕ Add Bank</button>
+                            </div>
+
+                            <div id="banks-settings"></div>
+
+                            <div class="button-group" style="margin-top: 2rem;">
+                                <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+                                <button type="button" class="btn btn-secondary" id="recalculate-btn">🔄 Recalculate</button>
+                                <button type="button" class="btn" id="rollover-btn" style="background: #f59e0b; color: white;">📅 Rollover Month</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h2>📤 Export</h2>
+                        <button class="btn btn-secondary" id="export-btn">📤 Export to CSV</button>
+                    </div>
+
+                    <div class="card">
+                        <h2>🔐 Account</h2>
+                        <div style="display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid var(--color-primary);">
+                            <img id="settings-user-avatar" src="" alt="User" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--color-primary); box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                            <div style="flex: 1;">
+                                <div id="settings-user-name" style="font-weight: 700; font-size: 1.2rem; color: var(--color-text); margin-bottom: 0.25rem;">User Name</div>
+                                <div id="settings-user-email" style="color: var(--color-text-light); font-size: 0.95rem;">email@example.com</div>
+                                <div style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: rgba(37, 99, 235, 0.1); border-radius: 8px; display: inline-block;">
+                                    <span style="color: var(--color-primary); font-weight: 600; font-size: 0.85rem;">✅ Authenticated</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="handleSignOut()" class="btn btn-danger" style="width: 100%; font-size: 1.05rem; padding: 1rem;">
+                            🚪 Sign Out from Account
+                        </button>
+                        <p style="text-align: center; color: var(--color-text-light); margin-top: 1rem; font-size: 0.9rem;">
+                            Your data is securely stored in your Google Drive
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h2>✏️ Edit Transaction</h2>
+            <form id="edit-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label for="edit-date">Date</label>
+                    <input type="date" id="edit-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-description">Description</label>
+                    <input type="text" id="edit-description" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-amount">Amount</label>
+                    <input type="number" id="edit-amount" step="0.01" min="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-bank">Bank</label>
+                    <select id="edit-bank" required>
+                        <option value="">Select Bank</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">💾 Save</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-edit-btn">❌ Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-bank-modal" class="modal">
+        <div class="modal-content">
+            <h2>🏦 Add New Bank</h2>
+            <form id="add-bank-form">
+                <div class="form-group">
+                    <label for="bank-name">Bank Name</label>
+                    <input type="text" id="bank-name" placeholder="e.g., HDFC Bank" required>
+                </div>
+                <div class="form-group">
+                    <label for="bank-code">Bank Code</label>
+                    <input type="text" id="bank-code" placeholder="e.g., hdfc (lowercase)" required>
+                    <small style="color: #64748b;">Only letters and numbers, no spaces</small>
+                </div>
+                <div class="form-group">
+                    <label for="bank-color">Bank Color</label>
+                    <input type="color" id="bank-color" value="#2563eb">
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">➕ Add Bank</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-bank-btn">❌ Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="script.js"></script>
 </body>
 </html>
